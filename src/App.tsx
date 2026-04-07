@@ -3,8 +3,19 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import Forbidden from "./pages/Forbidden";
+
+import SuperadminDashboard, { SuperadminAdmins, SuperadminUsers, SuperadminSettings } from "./pages/SuperadminDashboard";
+import AdminDashboard, { AdminStaff, AdminTeachers, AdminClients } from "./pages/AdminDashboard";
+import StaffDashboard, { StaffClients, StaffLeads, StaffChat } from "./pages/StaffDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import ClientDashboard, { ClientNotifications } from "./pages/ClientDashboard";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +25,40 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/403" element={<Forbidden />} />
+
+            {/* Superadmin */}
+            <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminDashboard /></ProtectedRoute>} />
+            <Route path="/superadmin/admins" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminAdmins /></ProtectedRoute>} />
+            <Route path="/superadmin/users" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminUsers /></ProtectedRoute>} />
+            <Route path="/superadmin/settings" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSettings /></ProtectedRoute>} />
+
+            {/* Admin */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/staff" element={<ProtectedRoute allowedRoles={["admin"]}><AdminStaff /></ProtectedRoute>} />
+            <Route path="/admin/teachers" element={<ProtectedRoute allowedRoles={["admin"]}><AdminTeachers /></ProtectedRoute>} />
+            <Route path="/admin/clients" element={<ProtectedRoute allowedRoles={["admin"]}><AdminClients /></ProtectedRoute>} />
+
+            {/* Staff */}
+            <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff"]}><StaffDashboard /></ProtectedRoute>} />
+            <Route path="/staff/clients" element={<ProtectedRoute allowedRoles={["staff"]}><StaffClients /></ProtectedRoute>} />
+            <Route path="/staff/leads" element={<ProtectedRoute allowedRoles={["staff"]}><StaffLeads /></ProtectedRoute>} />
+            <Route path="/staff/chat" element={<ProtectedRoute allowedRoles={["staff"]}><StaffChat /></ProtectedRoute>} />
+
+            {/* Teacher */}
+            <Route path="/teacher" element={<ProtectedRoute allowedRoles={["teacher"]}><TeacherDashboard /></ProtectedRoute>} />
+
+            {/* Client */}
+            <Route path="/client" element={<ProtectedRoute allowedRoles={["client"]}><ClientDashboard /></ProtectedRoute>} />
+            <Route path="/client/notifications" element={<ProtectedRoute allowedRoles={["client"]}><ClientNotifications /></ProtectedRoute>} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
