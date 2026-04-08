@@ -157,12 +157,18 @@ export function ClientNotifications() {
 
   useEffect(() => {
     if (!profile) return;
-    const fetch = async () => {
+    const fetchAndMark = async () => {
       const { data } = await supabase.from("notifications").select("*").eq("user_id", profile.id).order("created_at", { ascending: false });
       setNotifications(data || []);
       setLoading(false);
+
+      // Mark unread as read
+      const unread = data?.filter((n) => !n.is_read).map((n) => n.id) || [];
+      if (unread.length > 0) {
+        await supabase.from("notifications").update({ is_read: true }).in("id", unread);
+      }
     };
-    fetch();
+    fetchAndMark();
   }, [profile]);
 
   return (
