@@ -38,7 +38,7 @@ export default function AdminLeads() {
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
-    await supabase.from("contact_leads").update({ status }).eq("id", id);
+    await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
     toast.success("Cập nhật trạng thái thành công!");
   };

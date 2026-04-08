@@ -67,7 +67,7 @@ export function StaffClients() {
     if (!editUser) return;
     setSaving(true);
     const { error } = await supabase.from("profiles").update({
-      full_name: form.full_name, phone: form.phone, license_type: form.license_type || null, teacher_id: form.teacher_id || null,
+      full_name: form.full_name, phone: form.phone, license_type: (form.license_type || null) as any, teacher_id: form.teacher_id || null,
     }).eq("id", editUser.id);
     if (error) toast.error("Cập nhật thất bại");
     else { toast.success("Cập nhật thành công!"); setEditUser(null); setForm({}); fetchClients(); }
@@ -188,7 +188,7 @@ export function StaffLeads() {
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
-    await supabase.from("contact_leads").update({ status }).eq("id", id);
+    await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
     toast.success("Cập nhật trạng thái thành công!");
   };

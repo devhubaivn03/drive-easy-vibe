@@ -40,7 +40,7 @@ function UserManagementPage({
   const [saving, setSaving] = useState(false);
 
   const fetchUsers = async () => {
-    let query = supabase.from("profiles").select("*").eq("role", role);
+    let query = supabase.from("profiles").select("*").eq("role", role as any);
     if (profile?.role === "admin") query = query.eq("admin_id", profile.id);
     const { data } = await query.order("created_at", { ascending: false });
     setUsers(data || []);

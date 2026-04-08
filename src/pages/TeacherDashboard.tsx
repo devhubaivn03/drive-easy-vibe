@@ -106,7 +106,7 @@ function StudentProgress({ student, onBack, teacherId }: { student: any; onBack:
           road_test_score: data.road_test_score?.toString() || "",
           track_test_score: data.track_test_score?.toString() || "",
           notes: data.notes || "",
-          schedule_milestones: data.schedule_milestones || [],
+          schedule_milestones: (data.schedule_milestones as any) || [],
         });
       } else {
         setForm({
