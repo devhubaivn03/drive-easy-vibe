@@ -13,6 +13,8 @@ import Forbidden from "./pages/Forbidden";
 
 import SuperadminDashboard, { SuperadminAdmins, SuperadminUsers, SuperadminSettings } from "./pages/SuperadminDashboard";
 import AdminDashboard, { AdminStaff, AdminTeachers, AdminClients } from "./pages/AdminDashboard";
+import AdminLeads from "./pages/AdminLeads";
+import AdminChat from "./pages/AdminChat";
 import StaffDashboard, { StaffClients, StaffLeads, StaffChat } from "./pages/StaffDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import ClientDashboard, { ClientNotifications } from "./pages/ClientDashboard";
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/admin/staff" element={<ProtectedRoute allowedRoles={["admin"]}><AdminStaff /></ProtectedRoute>} />
             <Route path="/admin/teachers" element={<ProtectedRoute allowedRoles={["admin"]}><AdminTeachers /></ProtectedRoute>} />
             <Route path="/admin/clients" element={<ProtectedRoute allowedRoles={["admin"]}><AdminClients /></ProtectedRoute>} />
+            <Route path="/admin/leads" element={<ProtectedRoute allowedRoles={["admin"]}><AdminLeads /></ProtectedRoute>} />
+            <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={["admin"]}><AdminChat /></ProtectedRoute>} />
 
             {/* Staff */}
             <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff"]}><StaffDashboard /></ProtectedRoute>} />
