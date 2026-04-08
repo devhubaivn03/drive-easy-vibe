@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { TableSkeleton, EmptyState } from "@/components/shared/StatCard";
+import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Users, ClipboardList, MessageCircle, LayoutDashboard, UserPlus, Pencil, Send } from "lucide-react";
@@ -20,10 +20,34 @@ const navItems = [
 ];
 
 export default function StaffDashboard() {
+  const { profile } = useAuth();
+  const [stats, setStats] = useState({ clients: 0, leads: 0, chats: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!profile) return;
+    const fetchStats = async () => {
+      const [c, l, ch] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "client"),
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+      ]);
+      setStats({ clients: c.count || 0, leads: l.count || 0, chats: ch.count || 0 });
+      setLoading(false);
+    };
+    fetchStats();
+  }, [profile]);
+
   return (
     <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Tổng quan</h1>
-      <p className="text-muted-foreground">Chào mừng đến trang nhân viên.</p>
+      {loading ? <TableSkeleton rows={2} /> : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard icon={<Users size={24} />} label="Học viên" value={stats.clients} />
+          <StatCard icon={<ClipboardList size={24} />} label="Lead mới" value={stats.leads} colorClass="gradient-secondary" />
+          <StatCard icon={<MessageCircle size={24} />} label="Chat chờ" value={stats.chats} colorClass="gradient-accent" />
+        </div>
+      )}
     </DashboardLayout>
   );
 }
