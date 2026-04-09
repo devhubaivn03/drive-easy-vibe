@@ -40,7 +40,7 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="fixed top-0 z-40 w-full glass-card border-b border-border/50">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <span className="text-xl font-extrabold gradient-text">🚗 DriveSchool</span>
+          <span className="text-xl font-extrabold gradient-text"><span className="text-xl font-extrabold gradient-text">🚗 DriveMaster</span></span>
           <Link to="/login">
             <Button variant="hero" size="sm" className="rounded-xl">
               <LogIn size={16} />

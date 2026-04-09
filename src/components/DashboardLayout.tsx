@@ -78,7 +78,7 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between px-5 border-b border-sidebar-border">
-          <span className="text-lg font-extrabold text-sidebar-foreground">🚗 DriveSchool</span>
+          <span className="text-lg font-extrabold text-sidebar-foreground"><span className="text-lg font-extrabold text-sidebar-foreground">🚗 DriveMaster</span></span>
           <button className="text-sidebar-foreground md:hidden" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
