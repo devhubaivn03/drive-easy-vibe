@@ -61,7 +61,7 @@ export default function Login() {
       >
         <div className="mb-8 text-center">
           <h1 className="mb-2 text-3xl font-bold">
-            <span className="gradient-text">DriveSchool</span>
+            <span className="gradient-text">DriveMaster</span>
           </h1>
           <p className="text-muted-foreground">Đăng nhập vào hệ thống quản lý</p>
         </div>
