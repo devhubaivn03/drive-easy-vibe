@@ -17,7 +17,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Verify the caller is authenticated and has appropriate role
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -36,7 +35,6 @@ serve(async (req) => {
       });
     }
 
-    // Get caller profile to check role
     const { data: callerProfile } = await supabaseAdmin
       .from("profiles")
       .select("role, id, admin_id")
@@ -51,9 +49,57 @@ serve(async (req) => {
     }
 
     const body = await req.json();
+    const { action } = body;
+
+    // === UPDATE USER PASSWORD/EMAIL ===
+    if (action === "update_user") {
+      const { user_id, new_password, new_email } = body;
+
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check permission: caller must be superadmin, admin (owns user), or staff (for clients)
+      const allowedRoles = ["superadmin", "admin", "staff"];
+      if (!allowedRoles.includes(callerProfile.role)) {
+        return new Response(JSON.stringify({ error: "Insufficient permissions" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const updatePayload: any = {};
+      if (new_password) updatePayload.password = new_password;
+      if (new_email) updatePayload.email = new_email;
+
+      if (Object.keys(updatePayload).length === 0) {
+        return new Response(JSON.stringify({ error: "Nothing to update" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user_id, updatePayload);
+
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // === CREATE USER (default action) ===
     const { email, password, full_name, phone, role, admin_id, teacher_id, license_type } = body;
 
-    // Role-based permission check
     const allowedCreations: Record<string, string[]> = {
       superadmin: ["admin", "teacher", "staff", "client"],
       admin: ["teacher", "staff", "client"],
@@ -67,7 +113,6 @@ serve(async (req) => {
       });
     }
 
-    // Create user via admin API (no email confirmation needed)
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -81,7 +126,6 @@ serve(async (req) => {
       });
     }
 
-    // Determine admin_id based on caller role
     let resolvedAdminId = admin_id;
     if (callerProfile.role === "admin") {
       resolvedAdminId = callerProfile.id;
@@ -89,7 +133,6 @@ serve(async (req) => {
       resolvedAdminId = callerProfile.admin_id;
     }
 
-    // Create profile
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: newUser.user!.id,
       email,
@@ -103,7 +146,6 @@ serve(async (req) => {
     });
 
     if (profileError) {
-      // Rollback: delete the auth user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user!.id);
       return new Response(JSON.stringify({ error: profileError.message }), {
         status: 400,
