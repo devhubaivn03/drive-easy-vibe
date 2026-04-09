@@ -72,13 +72,13 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
         <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - hidden on mobile, shown on md+ */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 flex w-64 flex-col gradient-sidebar transition-transform duration-300 md:relative md:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between px-5 border-b border-sidebar-border">
-          <span className="text-lg font-extrabold text-sidebar-foreground"><span className="text-lg font-extrabold text-sidebar-foreground">🚗 DriveMaster</span></span>
+          <span className="text-lg font-extrabold text-sidebar-foreground">🚗 DriveMaster</span>
           <button className="text-sidebar-foreground md:hidden" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
@@ -124,7 +124,7 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
       </aside>
 
       {/* Main */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col pb-16 md:pb-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between glass-card border-b border-border/50 px-4 md:px-6">
           <button className="text-foreground md:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu size={24} />
@@ -194,6 +194,33 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
           </motion.div>
         </main>
       </div>
+
+      {/* Bottom Navigation - Mobile only */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden glass-card border-t border-border/50">
+        {navItems.slice(0, 5).map((item) => {
+          const active = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors",
+                active ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {item.icon}
+              <span className="truncate max-w-[60px]">{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={handleSignOut}
+          className="flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium text-muted-foreground"
+        >
+          <LogOut size={18} />
+          <span>Thoát</span>
+        </button>
+      </nav>
     </div>
   );
 }

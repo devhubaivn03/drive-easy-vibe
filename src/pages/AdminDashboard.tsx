@@ -34,6 +34,8 @@ function UserManagementPage({
   const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterLicense, setFilterLicense] = useState("");
+  const [filterTeacher, setFilterTeacher] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [form, setForm] = useState<Record<string, string>>({});
@@ -88,21 +90,36 @@ function UserManagementPage({
     fields.forEach((f) => { if (form[f.key] !== undefined) updates[f.key] = form[f.key]; });
 
     const { error } = await supabase.from("profiles").update(updates).eq("id", editUser.id);
-    if (error) toast.error("Cập nhật thất bại");
-    else {
-      toast.success("Cập nhật thành công!");
-      setEditUser(null);
-      setForm({});
-      fetchUsers();
+    if (error) {
+      toast.error("Cập nhật thất bại");
+      setSaving(false);
+      return;
     }
+
+    // Update password if provided
+    if (form.new_password) {
+      const { error: pwErr } = await supabase.functions.invoke("admin-create-user", {
+        body: { action: "update_user", user_id: editUser.id, new_password: form.new_password },
+      });
+      if (pwErr) toast.error("Đổi mật khẩu thất bại");
+      else toast.success("Đã đổi mật khẩu!");
+    }
+
+    toast.success("Cập nhật thành công!");
+    setEditUser(null);
+    setForm({});
+    fetchUsers();
     setSaving(false);
   };
 
-  const filtered = users.filter((u) =>
-    u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.phone?.includes(search)
-  );
+  const filtered = users.filter((u) => {
+    const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase()) ||
+      u.phone?.includes(search);
+    const matchLicense = !filterLicense || u.license_type === filterLicense;
+    const matchTeacher = !filterTeacher || u.teacher_id === filterTeacher;
+    return matchSearch && matchLicense && matchTeacher;
+  });
 
   const formFields = (isEdit: boolean) => (
     <div className="space-y-4">
@@ -139,6 +156,12 @@ function UserManagementPage({
           <div><Label>Mật khẩu *</Label><Input type="password" value={form.password || ""} onChange={(e) => setForm({ ...form, password: e.target.value })} className="rounded-xl" /></div>
         </>
       )}
+      {isEdit && (
+        <div>
+          <Label>Đổi mật khẩu (tùy chọn)</Label>
+          <Input type="password" placeholder="Để trống nếu không đổi" value={form.new_password || ""} onChange={(e) => setForm({ ...form, new_password: e.target.value })} className="rounded-xl" />
+        </div>
+      )}
       <Button variant="hero" className="w-full rounded-xl" onClick={isEdit ? handleEdit : handleCreate} disabled={saving}>
         {saving ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
       </Button>
@@ -160,7 +183,27 @@ function UserManagementPage({
         </Dialog>
       </div>
 
-      <Input placeholder="Tìm kiếm..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-4 max-w-sm rounded-xl" />
+      <div className="mb-4 flex flex-wrap gap-3">
+        <Input placeholder="Tìm kiếm..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs rounded-xl" />
+        {role === "client" && (
+          <>
+            <Select value={filterLicense} onValueChange={setFilterLicense}>
+              <SelectTrigger className="w-36 rounded-xl"><SelectValue placeholder="Loại bằng lái" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                {["A1","A2","B1","B2","C","D","E","F"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterTeacher} onValueChange={setFilterTeacher}>
+              <SelectTrigger className="w-44 rounded-xl"><SelectValue placeholder="Giáo viên" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả GV</SelectItem>
+                {teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </>
+        )}
+      </div>
 
       {loading ? <TableSkeleton /> : filtered.length === 0 ? (
         <EmptyState title="Chưa có dữ liệu" description="Tạo mới để bắt đầu" icon={<Users size={40} />} />
@@ -172,6 +215,7 @@ function UserManagementPage({
               <th className="p-4 font-semibold text-muted-foreground">Email</th>
               <th className="p-4 font-semibold text-muted-foreground">SĐT</th>
               {role === "client" && <th className="p-4 font-semibold text-muted-foreground">Bằng lái</th>}
+              {role === "client" && <th className="p-4 font-semibold text-muted-foreground">Giáo viên</th>}
               <th className="p-4 font-semibold text-muted-foreground"></th>
             </tr></thead>
             <tbody>
@@ -181,6 +225,7 @@ function UserManagementPage({
                   <td className="p-4 text-muted-foreground">{u.email}</td>
                   <td className="p-4 text-muted-foreground">{u.phone || "—"}</td>
                   {role === "client" && <td className="p-4"><span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">{u.license_type || "—"}</span></td>}
+                  {role === "client" && <td className="p-4 text-muted-foreground">{teachers.find(t => t.id === u.teacher_id)?.full_name || "—"}</td>}
                   <td className="p-4">
                     <Button variant="ghost" size="icon" onClick={() => {
                       setEditUser(u);
