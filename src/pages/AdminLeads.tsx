@@ -2,8 +2,13 @@ import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { TableSkeleton, EmptyState } from "@/components/shared/StatCard";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, Users, GraduationCap, LayoutDashboard, MessageCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { ClipboardList, Users, GraduationCap, LayoutDashboard, MessageCircle, UserCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const navItems = [
@@ -16,8 +21,13 @@ const navItems = [
 ];
 
 export default function AdminLeads() {
+  const { profile } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [convertLead, setConvertLead] = useState<any>(null);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [convertForm, setConvertForm] = useState<Record<string, string>>({});
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -27,6 +37,14 @@ export default function AdminLeads() {
     };
     fetchLeads();
 
+    const fetchTeachers = async () => {
+      let query = supabase.from("profiles").select("id, full_name").eq("role", "teacher");
+      if (profile?.role === "admin") query = query.eq("admin_id", profile.id);
+      const { data } = await query;
+      setTeachers(data || []);
+    };
+    fetchTeachers();
+
     const channel = supabase.channel("admin-leads-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_leads" }, (payload) => {
         setLeads((prev) => [payload.new as any, ...prev]);
@@ -35,12 +53,42 @@ export default function AdminLeads() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [profile]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
     toast.success("Cập nhật trạng thái thành công!");
+  };
+
+  const handleConvert = async () => {
+    if (!convertLead || !convertForm.email || !convertForm.password) {
+      toast.error("Vui lòng điền email và mật khẩu");
+      return;
+    }
+    setConverting(true);
+    const { error } = await supabase.functions.invoke("admin-create-user", {
+      body: {
+        full_name: convertLead.name,
+        phone: convertLead.phone,
+        email: convertForm.email,
+        password: convertForm.password,
+        role: "client",
+        admin_id: profile?.id,
+        teacher_id: convertForm.teacher_id || undefined,
+        license_type: convertForm.license_type || undefined,
+      },
+    });
+    if (error) {
+      toast.error("Chuyển đổi thất bại: " + error.message);
+    } else {
+      toast.success("Đã chuyển lead thành học viên!");
+      await supabase.from("contact_leads").update({ status: "converted" as any }).eq("id", convertLead.id);
+      setLeads((prev) => prev.map((l) => l.id === convertLead.id ? { ...l, status: "converted" } : l));
+      setConvertLead(null);
+      setConvertForm({});
+    }
+    setConverting(false);
   };
 
   const statusBadge = (s: string) => {
@@ -70,7 +118,7 @@ export default function AdminLeads() {
                 <td className="p-4 text-muted-foreground max-w-xs truncate">{l.content || "—"}</td>
                 <td className="p-4">{statusBadge(l.status)}</td>
                 <td className="p-4 text-muted-foreground">{new Date(l.created_at).toLocaleDateString("vi-VN")}</td>
-                <td className="p-4">
+                <td className="p-4 flex gap-2">
                   <Select value={l.status} onValueChange={(v) => updateStatus(l.id, v)}>
                     <SelectTrigger className="w-32 rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -79,12 +127,50 @@ export default function AdminLeads() {
                       <SelectItem value="converted">Đã chuyển đổi</SelectItem>
                     </SelectContent>
                   </Select>
+                  {l.status !== "converted" && (
+                    <Button variant="accent" size="sm" className="rounded-xl" onClick={() => {
+                      setConvertLead(l);
+                      setConvertForm({ email: "", password: "" });
+                    }}>
+                      <UserCheck size={14} /> Chuyển HV
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}</tbody>
           </table>
         </div>
       )}
+
+      <Dialog open={!!convertLead} onOpenChange={(o) => { if (!o) { setConvertLead(null); setConvertForm({}); } }}>
+        <DialogContent className="glass-card">
+          <DialogHeader><DialogTitle>Chuyển lead thành học viên</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="glass-card rounded-xl p-3 text-sm">
+              <p className="text-foreground font-medium">{convertLead?.name}</p>
+              <p className="text-muted-foreground">{convertLead?.phone}</p>
+              {convertLead?.content && <p className="text-muted-foreground mt-1">{convertLead.content}</p>}
+            </div>
+            <div><Label>Email *</Label><Input type="email" value={convertForm.email || ""} onChange={(e) => setConvertForm({ ...convertForm, email: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Mật khẩu *</Label><Input type="password" value={convertForm.password || ""} onChange={(e) => setConvertForm({ ...convertForm, password: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Loại bằng lái</Label>
+              <Select value={convertForm.license_type || ""} onValueChange={(v) => setConvertForm({ ...convertForm, license_type: v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn" /></SelectTrigger>
+                <SelectContent>{["A1","A2","B1","B2","C","D","E","F"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Giáo viên phụ trách</Label>
+              <Select value={convertForm.teacher_id || ""} onValueChange={(v) => setConvertForm({ ...convertForm, teacher_id: v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn giáo viên" /></SelectTrigger>
+                <SelectContent>{teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <Button variant="hero" className="w-full rounded-xl" onClick={handleConvert} disabled={converting}>
+              {converting ? "Đang chuyển đổi..." : "Chuyển thành học viên"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
