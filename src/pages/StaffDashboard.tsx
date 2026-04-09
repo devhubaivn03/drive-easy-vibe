@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, ClipboardList, MessageCircle, LayoutDashboard, UserPlus, Pencil, Send } from "lucide-react";
+import { Users, ClipboardList, MessageCircle, LayoutDashboard, UserPlus, Pencil, Send, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,8 @@ export function StaffClients() {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterLicense, setFilterLicense] = useState("");
+  const [filterTeacher, setFilterTeacher] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [form, setForm] = useState<Record<string, string>>({});
@@ -93,16 +95,29 @@ export function StaffClients() {
     const { error } = await supabase.from("profiles").update({
       full_name: form.full_name, phone: form.phone, license_type: (form.license_type || null) as any, teacher_id: form.teacher_id || null,
     }).eq("id", editUser.id);
-    if (error) toast.error("Cập nhật thất bại");
-    else { toast.success("Cập nhật thành công!"); setEditUser(null); setForm({}); fetchClients(); }
+    if (error) { toast.error("Cập nhật thất bại"); setSaving(false); return; }
+
+    if (form.new_password) {
+      const { error: pwErr } = await supabase.functions.invoke("admin-create-user", {
+        body: { action: "update_user", user_id: editUser.id, new_password: form.new_password },
+      });
+      if (pwErr) toast.error("Đổi mật khẩu thất bại");
+      else toast.success("Đã đổi mật khẩu!");
+    }
+
+    toast.success("Cập nhật thành công!");
+    setEditUser(null); setForm({}); fetchClients();
     setSaving(false);
   };
 
-  const filtered = clients.filter((c) =>
-    c.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.email?.toLowerCase().includes(search.toLowerCase()) ||
-    c.phone?.includes(search)
-  );
+  const filtered = clients.filter((c) => {
+    const matchSearch = c.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.phone?.includes(search);
+    const matchLicense = !filterLicense || c.license_type === filterLicense;
+    const matchTeacher = !filterTeacher || c.teacher_id === filterTeacher;
+    return matchSearch && matchLicense && matchTeacher;
+  });
 
   return (
     <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
@@ -135,7 +150,23 @@ export function StaffClients() {
         </Dialog>
       </div>
 
-      <Input placeholder="Tìm kiếm..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-4 max-w-sm rounded-xl" />
+      <div className="mb-4 flex flex-wrap gap-3">
+        <Input placeholder="Tìm kiếm..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs rounded-xl" />
+        <Select value={filterLicense} onValueChange={setFilterLicense}>
+          <SelectTrigger className="w-36 rounded-xl"><SelectValue placeholder="Loại bằng lái" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả</SelectItem>
+            {["A1","A2","B1","B2","C","D","E","F"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterTeacher} onValueChange={setFilterTeacher}>
+          <SelectTrigger className="w-44 rounded-xl"><SelectValue placeholder="Giáo viên" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả GV</SelectItem>
+            {teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
       {loading ? <TableSkeleton /> : filtered.length === 0 ? <EmptyState title="Chưa có học viên" description="Tạo mới để bắt đầu" icon={<Users size={40} />} /> : (
         <div className="glass-card rounded-2xl overflow-x-auto">
@@ -145,6 +176,7 @@ export function StaffClients() {
               <th className="p-4 font-semibold text-muted-foreground">Email</th>
               <th className="p-4 font-semibold text-muted-foreground">SĐT</th>
               <th className="p-4 font-semibold text-muted-foreground">Bằng lái</th>
+              <th className="p-4 font-semibold text-muted-foreground">Giáo viên</th>
               <th className="p-4"></th>
             </tr></thead>
             <tbody>{filtered.map((c) => (
@@ -153,6 +185,7 @@ export function StaffClients() {
                 <td className="p-4 text-muted-foreground">{c.email}</td>
                 <td className="p-4 text-muted-foreground">{c.phone || "—"}</td>
                 <td className="p-4"><span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">{c.license_type || "—"}</span></td>
+                <td className="p-4 text-muted-foreground">{teachers.find(t => t.id === c.teacher_id)?.full_name || "—"}</td>
                 <td className="p-4"><Button variant="ghost" size="icon" onClick={() => {
                   setEditUser(c);
                   setForm({ full_name: c.full_name, phone: c.phone || "", license_type: c.license_type || "", teacher_id: c.teacher_id || "" });
@@ -181,6 +214,7 @@ export function StaffClients() {
                 <SelectContent>{teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div><Label>Đổi mật khẩu (tùy chọn)</Label><Input type="password" placeholder="Để trống nếu không đổi" value={form.new_password || ""} onChange={(e) => setForm({ ...form, new_password: e.target.value })} className="rounded-xl" /></div>
             <Button variant="hero" className="w-full rounded-xl" onClick={handleEdit} disabled={saving}>{saving ? "Đang lưu..." : "Cập nhật"}</Button>
           </div>
         </DialogContent>
@@ -190,8 +224,13 @@ export function StaffClients() {
 }
 
 export function StaffLeads() {
+  const { profile } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [convertLead, setConvertLead] = useState<any>(null);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [convertForm, setConvertForm] = useState<Record<string, string>>({});
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -200,6 +239,12 @@ export function StaffLeads() {
       setLoading(false);
     };
     fetchLeads();
+
+    const fetchTeachers = async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name").eq("role", "teacher");
+      setTeachers(data || []);
+    };
+    fetchTeachers();
 
     const channel = supabase.channel("leads-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_leads" }, (payload) => {
@@ -215,6 +260,36 @@ export function StaffLeads() {
     await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
     setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
     toast.success("Cập nhật trạng thái thành công!");
+  };
+
+  const handleConvert = async () => {
+    if (!convertLead || !convertForm.email || !convertForm.password) {
+      toast.error("Vui lòng điền email và mật khẩu");
+      return;
+    }
+    setConverting(true);
+    const { error } = await supabase.functions.invoke("admin-create-user", {
+      body: {
+        full_name: convertLead.name,
+        phone: convertLead.phone,
+        email: convertForm.email,
+        password: convertForm.password,
+        role: "client",
+        admin_id: profile?.admin_id,
+        teacher_id: convertForm.teacher_id || undefined,
+        license_type: convertForm.license_type || undefined,
+      },
+    });
+    if (error) {
+      toast.error("Chuyển đổi thất bại: " + error.message);
+    } else {
+      toast.success("Đã chuyển lead thành học viên!");
+      await supabase.from("contact_leads").update({ status: "converted" as any }).eq("id", convertLead.id);
+      setLeads((prev) => prev.map((l) => l.id === convertLead.id ? { ...l, status: "converted" } : l));
+      setConvertLead(null);
+      setConvertForm({});
+    }
+    setConverting(false);
   };
 
   const statusBadge = (s: string) => {
@@ -244,7 +319,7 @@ export function StaffLeads() {
                 <td className="p-4 text-muted-foreground max-w-xs truncate">{l.content || "—"}</td>
                 <td className="p-4">{statusBadge(l.status)}</td>
                 <td className="p-4 text-muted-foreground">{new Date(l.created_at).toLocaleDateString("vi-VN")}</td>
-                <td className="p-4">
+                <td className="p-4 flex gap-2">
                   <Select value={l.status} onValueChange={(v) => updateStatus(l.id, v)}>
                     <SelectTrigger className="w-32 rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -253,12 +328,51 @@ export function StaffLeads() {
                       <SelectItem value="converted">Đã chuyển đổi</SelectItem>
                     </SelectContent>
                   </Select>
+                  {l.status !== "converted" && (
+                    <Button variant="accent" size="sm" className="rounded-xl" onClick={() => {
+                      setConvertLead(l);
+                      setConvertForm({ email: "", password: "" });
+                    }}>
+                      <UserCheck size={14} /> Chuyển HV
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}</tbody>
           </table>
         </div>
       )}
+
+      {/* Convert Lead to Student Dialog */}
+      <Dialog open={!!convertLead} onOpenChange={(o) => { if (!o) { setConvertLead(null); setConvertForm({}); } }}>
+        <DialogContent className="glass-card">
+          <DialogHeader><DialogTitle>Chuyển lead thành học viên</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="glass-card rounded-xl p-3 text-sm">
+              <p className="text-foreground font-medium">{convertLead?.name}</p>
+              <p className="text-muted-foreground">{convertLead?.phone}</p>
+              {convertLead?.content && <p className="text-muted-foreground mt-1">{convertLead.content}</p>}
+            </div>
+            <div><Label>Email *</Label><Input type="email" value={convertForm.email || ""} onChange={(e) => setConvertForm({ ...convertForm, email: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Mật khẩu *</Label><Input type="password" value={convertForm.password || ""} onChange={(e) => setConvertForm({ ...convertForm, password: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Loại bằng lái</Label>
+              <Select value={convertForm.license_type || ""} onValueChange={(v) => setConvertForm({ ...convertForm, license_type: v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn" /></SelectTrigger>
+                <SelectContent>{["A1","A2","B1","B2","C","D","E","F"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Giáo viên phụ trách</Label>
+              <Select value={convertForm.teacher_id || ""} onValueChange={(v) => setConvertForm({ ...convertForm, teacher_id: v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn giáo viên" /></SelectTrigger>
+                <SelectContent>{teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <Button variant="hero" className="w-full rounded-xl" onClick={handleConvert} disabled={converting}>
+              {converting ? "Đang chuyển đổi..." : "Chuyển thành học viên"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
@@ -329,8 +443,7 @@ export function StaffChat() {
     <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Chat trực tuyến</h1>
       <div className="flex gap-4 h-[calc(100vh-200px)]">
-        {/* Sessions list */}
-        <div className="w-80 glass-card rounded-2xl overflow-y-auto flex-shrink-0">
+        <div className="w-80 glass-card rounded-2xl overflow-y-auto flex-shrink-0 hidden md:block">
           <div className="p-4 border-b border-border/50 font-semibold text-foreground">Phiên chat ({sessions.length})</div>
           {sessions.map((s) => (
             <div
@@ -358,31 +471,46 @@ export function StaffChat() {
           {sessions.length === 0 && <p className="p-4 text-sm text-muted-foreground text-center">Chưa có phiên chat</p>}
         </div>
 
-        {/* Chat panel */}
         <div className="flex-1 glass-card rounded-2xl flex flex-col">
           {activeSession ? (
             <>
               <div className="flex items-center justify-between border-b border-border/50 p-4">
-                <span className="font-semibold text-foreground">{activeSession.visitor_name || "Khách ẩn danh"}</span>
+                <div>
+                  <p className="font-semibold text-foreground">{activeSession.visitor_name || "Khách ẩn danh"}</p>
+                  <p className="text-xs text-muted-foreground">Phiên #{activeSession.id.slice(0, 8)}</p>
+                </div>
                 <Button variant="destructive" size="sm" className="rounded-xl" onClick={closeSession}>Đóng phiên</Button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender_type === "staff" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm ${
-                      msg.sender_type === "staff" ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"
-                    }`}>{msg.content}</div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.map((m) => (
+                  <div key={m.id} className={cn("flex", m.sender_type === "staff" ? "justify-end" : "justify-start")}>
+                    <div className={cn(
+                      "max-w-xs rounded-2xl px-4 py-2 text-sm",
+                      m.sender_type === "staff" ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"
+                    )}>
+                      {m.content}
+                    </div>
                   </div>
                 ))}
                 <div ref={bottomRef} />
               </div>
-              <div className="flex items-center gap-2 border-t border-border/50 p-4">
-                <Input placeholder="Nhập tin nhắn..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} className="flex-1 rounded-xl" />
-                <Button size="icon" variant="hero" className="rounded-xl" onClick={sendMessage}><Send size={16} /></Button>
+
+              <div className="border-t border-border/50 p-4 flex gap-2">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder="Nhập tin nhắn..."
+                  className="rounded-xl"
+                />
+                <Button variant="hero" size="icon" className="rounded-xl" onClick={sendMessage}>
+                  <Send size={18} />
+                </Button>
               </div>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center text-muted-foreground">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <p>Chọn một phiên chat để bắt đầu</p>
             </div>
           )}
