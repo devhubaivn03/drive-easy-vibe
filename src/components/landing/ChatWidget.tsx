@@ -41,13 +41,12 @@ export function ChatWidget() {
         .in("status", ["waiting", "active"])
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setSessionId(data.id);
         setName(data.visitor_name || "");
         setStarted(true);
-        loadMessages(data.id);
       }
     };
     checkSession();
@@ -62,9 +61,13 @@ export function ChatWidget() {
     if (data) setMessages(data);
   };
 
-  // Subscribe to new messages
+  // Subscribe to new messages & load existing ones
   useEffect(() => {
     if (!sessionId) return;
+    
+    // Load all existing messages first
+    loadMessages(sessionId);
+
     const channel = supabase
       .channel(`chat-${sessionId}`)
       .on("postgres_changes", {
@@ -73,7 +76,12 @@ export function ChatWidget() {
         table: "chat_messages",
         filter: `session_id=eq.${sessionId}`,
       }, (payload) => {
-        setMessages((prev) => [...prev, payload.new as ChatMsg]);
+        const newMsg = payload.new as ChatMsg;
+        setMessages((prev) => {
+          // Prevent duplicates
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
       })
       .subscribe();
 
