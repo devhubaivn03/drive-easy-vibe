@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, Bell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -132,7 +133,8 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
 
           <div className="hidden md:block" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             {/* Notification bell */}
             <div className="relative">
               <Button variant="ghost" size="icon" className="relative" onClick={() => { setNotifOpen(!notifOpen); if (!notifOpen) markAllRead(); }}>
