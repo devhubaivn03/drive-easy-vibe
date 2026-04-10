@@ -409,7 +409,10 @@ export function StaffChat() {
 
     const channel = supabase.channel(`staff-msg-${activeSession.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `session_id=eq.${activeSession.id}` }, (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === (payload.new as any).id)) return prev;
+          return [...prev, payload.new];
+        });
       })
       .subscribe();
 
