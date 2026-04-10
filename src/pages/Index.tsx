@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ContactWidget } from "@/components/landing/ContactWidget";
 import { ChatWidget } from "@/components/landing/ChatWidget";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Bike, Car, LogIn, GraduationCap, Clock, Award, Users } from "lucide-react";
 
 const motorbikeInfo = {
