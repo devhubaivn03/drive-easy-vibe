@@ -133,7 +133,8 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
 
           <div className="hidden md:block" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             {/* Notification bell */}
             <div className="relative">
               <Button variant="ghost" size="icon" className="relative" onClick={() => { setNotifOpen(!notifOpen); if (!notifOpen) markAllRead(); }}>
