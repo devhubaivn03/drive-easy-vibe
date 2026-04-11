@@ -167,15 +167,71 @@ export function SuperadminUsers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [editUser, setEditUser] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", role: "", license_type: "" });
+  const [newPassword, setNewPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [passwordDialogUser, setPasswordDialogUser] = useState<any>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-      setUsers(data || []);
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+  const fetchUsers = async () => {
+    const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    setUsers(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const openEdit = (user: any) => {
+    setEditUser(user);
+    setEditForm({
+      full_name: user.full_name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      role: user.role || "client",
+      license_type: user.license_type || "",
+    });
+  };
+
+  const saveProfile = async () => {
+    if (!editUser) return;
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({
+      full_name: editForm.full_name,
+      phone: editForm.phone || null,
+      role: editForm.role as any,
+      license_type: editForm.license_type || null,
+    }).eq("id", editUser.id);
+
+    if (error) {
+      toast.error("Lưu thất bại: " + error.message);
+    } else {
+      toast.success("Cập nhật thành công!");
+      setEditUser(null);
+      fetchUsers();
+    }
+    setSaving(false);
+  };
+
+  const changePassword = async () => {
+    if (!passwordDialogUser || !newPassword) return;
+    if (newPassword.length < 6) {
+      toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await supabase.functions.invoke("admin-create-user", {
+      body: { action: "update_user", user_id: passwordDialogUser.id, new_password: newPassword },
+    });
+    if (error) {
+      toast.error("Đổi mật khẩu thất bại: " + error.message);
+    } else {
+      toast.success("Đổi mật khẩu thành công!");
+      setPasswordDialogUser(null);
+      setNewPassword("");
+    }
+    setChangingPassword(false);
+  };
 
   const filtered = users.filter((u) => {
     const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -219,6 +275,7 @@ export function SuperadminUsers() {
               <th className="p-4 font-semibold text-muted-foreground">Email</th>
               <th className="p-4 font-semibold text-muted-foreground">Role</th>
               <th className="p-4 font-semibold text-muted-foreground">SĐT</th>
+              <th className="p-4 font-semibold text-muted-foreground">Hành động</th>
             </tr></thead>
             <tbody>
               {filtered.map((u) => (
@@ -227,12 +284,78 @@ export function SuperadminUsers() {
                   <td className="p-4 text-muted-foreground">{u.email}</td>
                   <td className="p-4">{roleBadge(u.role)}</td>
                   <td className="p-4 text-muted-foreground">{u.phone || "—"}</td>
+                  <td className="p-4 flex gap-2">
+                    <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openEdit(u)}>
+                      <Pencil size={14} /> Sửa
+                    </Button>
+                    <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { setPasswordDialogUser(u); setNewPassword(""); }}>
+                      <KeyRound size={14} /> MK
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+        <DialogContent className="glass-card">
+          <DialogHeader><DialogTitle>Chỉnh sửa người dùng</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Họ tên</Label><Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Email (không thể đổi)</Label><Input value={editForm.email} disabled className="rounded-xl opacity-60" /></div>
+            <div><Label>Số điện thoại</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="rounded-xl" /></div>
+            <div>
+              <Label>Vai trò</Label>
+              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="teacher">Giáo viên</SelectItem>
+                  <SelectItem value="staff">Nhân viên</SelectItem>
+                  <SelectItem value="client">Học viên</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Loại bằng</Label>
+              <Select value={editForm.license_type || "none"} onValueChange={(v) => setEditForm({ ...editForm, license_type: v === "none" ? "" : v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Không có</SelectItem>
+                  <SelectItem value="A1">A1</SelectItem>
+                  <SelectItem value="A2">A2</SelectItem>
+                  <SelectItem value="B1">B1</SelectItem>
+                  <SelectItem value="B2">B2</SelectItem>
+                  <SelectItem value="C">C</SelectItem>
+                  <SelectItem value="D">D</SelectItem>
+                  <SelectItem value="E">E</SelectItem>
+                  <SelectItem value="F">F</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="hero" className="w-full rounded-xl" onClick={saveProfile} disabled={saving}>
+              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={!!passwordDialogUser} onOpenChange={(open) => !open && setPasswordDialogUser(null)}>
+        <DialogContent className="glass-card">
+          <DialogHeader><DialogTitle>Đổi mật khẩu — {passwordDialogUser?.full_name}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Mật khẩu mới</Label><Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Tối thiểu 6 ký tự" className="rounded-xl" /></div>
+            <Button variant="hero" className="w-full rounded-xl" onClick={changePassword} disabled={changingPassword}>
+              {changingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
