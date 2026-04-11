@@ -37,7 +37,7 @@ export default function LandingPage() {
   const [carOpen, setCarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background grid-bg overflow-hidden">
       {/* Navbar */}
       <nav className="fixed top-0 z-40 w-full glass-card border-b border-border/50">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
