@@ -200,7 +200,7 @@ export function SuperadminUsers() {
       full_name: editForm.full_name,
       phone: editForm.phone || null,
       role: editForm.role as any,
-      license_type: editForm.license_type || null,
+      license_type: (editForm.license_type || null) as any,
     }).eq("id", editUser.id);
 
     if (error) {
