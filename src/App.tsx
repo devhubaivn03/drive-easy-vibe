@@ -35,8 +35,9 @@ const App = () => (
 
             {/* Superadmin */}
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminDashboard /></ProtectedRoute>} />
-            <Route path="/superadmin/admins" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminAdmins /></ProtectedRoute>} />
             <Route path="/superadmin/users" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminUsers /></ProtectedRoute>} />
+            <Route path="/superadmin/leads" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminLeads /></ProtectedRoute>} />
+            <Route path="/superadmin/chat" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminChat /></ProtectedRoute>} />
             <Route path="/superadmin/settings" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSettings /></ProtectedRoute>} />
 
             {/* Admin */}
