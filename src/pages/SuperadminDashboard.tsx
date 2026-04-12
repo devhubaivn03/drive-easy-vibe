@@ -220,11 +220,13 @@ export function SuperadminUsers() {
       return;
     }
     setChangingPassword(true);
-    const { error } = await supabase.functions.invoke("admin-create-user", {
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
       body: { action: "update_user", user_id: passwordDialogUser.id, new_password: newPassword },
     });
     if (error) {
       toast.error("Đổi mật khẩu thất bại: " + error.message);
+    } else if (data?.error) {
+      toast.error("Đổi mật khẩu thất bại: " + data.error);
     } else {
       toast.success("Đổi mật khẩu thành công!");
       setPasswordDialogUser(null);
