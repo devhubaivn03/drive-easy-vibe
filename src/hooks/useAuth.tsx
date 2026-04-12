@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -39,29 +40,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("id", userId)
       .single();
     setProfile(data);
+    return data;
   };
 
   useEffect(() => {
+    // First get session, then set up listener
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
+      setLoading(false);
+      initializedRef.current = true;
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         if (session?.user) {
-          // Use setTimeout to avoid deadlock with Supabase auth
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          // Avoid deadlock with Supabase auth by deferring DB call
+          setTimeout(async () => {
+            await fetchProfile(session.user.id);
+            if (initializedRef.current) {
+              setLoading(false);
+            }
+          }, 0);
         } else {
           setProfile(null);
+          if (initializedRef.current) {
+            setLoading(false);
+          }
         }
-        setLoading(false);
       }
     );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      setLoading(false);
-    });
 
     return () => subscription.unsubscribe();
   }, []);
