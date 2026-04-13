@@ -8,10 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
-interface NavItem {
+export interface NavItem {
   label: string;
   path: string;
   icon: ReactNode;
+  badge?: number;
 }
 
 interface DashboardLayoutProps {
@@ -73,7 +74,7 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
         <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar - hidden on mobile, shown on md+ */}
+      {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 flex w-64 flex-col gradient-sidebar transition-transform duration-300 md:relative md:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -100,7 +101,7 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative",
                   active
                     ? "bg-sidebar-accent text-sidebar-primary-foreground"
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -108,6 +109,11 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
               >
                 {item.icon}
                 {item.label}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -206,11 +212,18 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors",
+                "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors relative",
                 active ? "text-primary" : "text-muted-foreground"
               )}
             >
-              {item.icon}
+              <div className="relative">
+                {item.icon}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[8px] font-bold text-destructive-foreground">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
               <span className="truncate max-w-[60px]">{item.label}</span>
             </Link>
           );

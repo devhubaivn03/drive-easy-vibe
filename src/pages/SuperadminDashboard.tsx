@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
+import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
 import { Users, GraduationCap, UserPlus, ClipboardList, Settings, LayoutDashboard, Pencil, KeyRound, MessageCircle, UserCheck, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,15 +13,50 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
-const navItems = [
-  { label: "Tổng quan", path: "/superadmin", icon: <LayoutDashboard size={18} /> },
-  { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
-  { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} /> },
-  { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} /> },
-  { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
-];
+function useNavBadges() {
+  const [newLeads, setNewLeads] = useState(0);
+  const [waitingChats, setWaitingChats] = useState(0);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const [l, c] = await Promise.all([
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+      ]);
+      setNewLeads(l.count || 0);
+      setWaitingChats(c.count || 0);
+    };
+    fetch();
+
+    const ch1 = supabase.channel("badge-leads")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
+      }).subscribe();
+
+    const ch2 = supabase.channel("badge-chats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
+      }).subscribe();
+
+    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
+  }, []);
+
+  return { newLeads, waitingChats };
+}
+
+function useNavItems(): NavItem[] {
+  const { newLeads, waitingChats } = useNavBadges();
+  return [
+    { label: "Tổng quan", path: "/superadmin", icon: <LayoutDashboard size={18} /> },
+    { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
+    { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
+    { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
+    { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
+  ];
+}
 
 export default function SuperadminDashboard() {
+  const navItems = useNavItems();
   return (
     <DashboardLayout navItems={navItems} roleLabel="SUPERADMIN" roleColor="gradient-primary text-primary-foreground">
       <SuperadminOverview />
@@ -70,6 +106,7 @@ function SuperadminOverview() {
 }
 
 export function SuperadminUsers() {
+  const navItems = useNavItems();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -208,7 +245,6 @@ export function SuperadminUsers() {
         </div>
       )}
 
-      {/* Edit Profile Dialog */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="glass-card">
           <DialogHeader>
@@ -238,14 +274,7 @@ export function SuperadminUsers() {
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Không có</SelectItem>
-                  <SelectItem value="A1">A1</SelectItem>
-                  <SelectItem value="A2">A2</SelectItem>
-                  <SelectItem value="B1">B1</SelectItem>
-                  <SelectItem value="B2">B2</SelectItem>
-                  <SelectItem value="C">C</SelectItem>
-                  <SelectItem value="D">D</SelectItem>
-                  <SelectItem value="E">E</SelectItem>
-                  <SelectItem value="F">F</SelectItem>
+                  {["A1","A2","B1","B2","C","D","E","F"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -256,7 +285,6 @@ export function SuperadminUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* Change Password Dialog */}
       <Dialog open={!!passwordDialogUser} onOpenChange={(open) => !open && setPasswordDialogUser(null)}>
         <DialogContent className="glass-card">
           <DialogHeader>
@@ -276,6 +304,7 @@ export function SuperadminUsers() {
 }
 
 export function SuperadminLeads() {
+  const navItems = useNavItems();
   const { profile } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -309,9 +338,13 @@ export function SuperadminLeads() {
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
-    await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
-    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
-    toast.success("Cập nhật trạng thái thành công!");
+    const { error } = await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
+    if (error) {
+      toast.error("Cập nhật thất bại: " + error.message);
+    } else {
+      setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
+      toast.success("Cập nhật trạng thái thành công!");
+    }
   };
 
   const handleConvert = async () => {
@@ -320,7 +353,7 @@ export function SuperadminLeads() {
       return;
     }
     setConverting(true);
-    const { error } = await supabase.functions.invoke("admin-create-user", {
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
       body: {
         full_name: convertLead.name,
         phone: convertLead.phone,
@@ -333,6 +366,8 @@ export function SuperadminLeads() {
     });
     if (error) {
       toast.error("Chuyển đổi thất bại: " + error.message);
+    } else if (data?.error) {
+      toast.error("Chuyển đổi thất bại: " + data.error);
     } else {
       toast.success("Đã chuyển lead thành học viên!");
       await supabase.from("contact_leads").update({ status: "converted" as any }).eq("id", convertLead.id);
@@ -431,6 +466,7 @@ export function SuperadminLeads() {
 }
 
 export function SuperadminChat() {
+  const navItems = useNavItems();
   const { profile } = useAuth();
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSession, setActiveSession] = useState<any>(null);
@@ -576,13 +612,11 @@ export function SuperadminChat() {
 }
 
 export function SuperadminSettings() {
+  const navItems = useNavItems();
   return (
     <DashboardLayout navItems={navItems} roleLabel="SUPERADMIN" roleColor="gradient-primary text-primary-foreground">
-      <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt hệ thống</h1>
-      <div className="glass-card rounded-2xl p-8 text-center">
-        <Settings size={48} className="mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">Tính năng đang được phát triển</p>
-      </div>
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
+      <ChangeOwnPassword />
     </DashboardLayout>
   );
 }

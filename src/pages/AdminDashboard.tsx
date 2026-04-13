@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
+import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, GraduationCap, UserPlus, LayoutDashboard, ClipboardList, MessageCircle, Pencil } from "lucide-react";
+import { Users, GraduationCap, UserPlus, LayoutDashboard, ClipboardList, MessageCircle, Pencil, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,14 +12,49 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-const navItems = [
-  { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
-  { label: "Quản lý Staff", path: "/admin/staff", icon: <Users size={18} /> },
-  { label: "Quản lý Giáo viên", path: "/admin/teachers", icon: <GraduationCap size={18} /> },
-  { label: "Quản lý Học viên", path: "/admin/clients", icon: <Users size={18} /> },
-  { label: "Lead liên hệ", path: "/admin/leads", icon: <ClipboardList size={18} /> },
-  { label: "Hộp thư Chat", path: "/admin/chat", icon: <MessageCircle size={18} /> },
-];
+function useAdminNavBadges() {
+  const [newLeads, setNewLeads] = useState(0);
+  const [waitingChats, setWaitingChats] = useState(0);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const [l, c] = await Promise.all([
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+      ]);
+      setNewLeads(l.count || 0);
+      setWaitingChats(c.count || 0);
+    };
+    fetch();
+
+    const ch1 = supabase.channel("admin-badge-leads")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
+      }).subscribe();
+
+    const ch2 = supabase.channel("admin-badge-chats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
+      }).subscribe();
+
+    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
+  }, []);
+
+  return { newLeads, waitingChats };
+}
+
+function useAdminNavItems(): NavItem[] {
+  const { newLeads, waitingChats } = useAdminNavBadges();
+  return [
+    { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
+    { label: "Quản lý Staff", path: "/admin/staff", icon: <Users size={18} /> },
+    { label: "Quản lý Giáo viên", path: "/admin/teachers", icon: <GraduationCap size={18} /> },
+    { label: "Quản lý Học viên", path: "/admin/clients", icon: <Users size={18} /> },
+    { label: "Lead liên hệ", path: "/admin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
+    { label: "Hộp thư Chat", path: "/admin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
+    { label: "Cài đặt", path: "/admin/settings", icon: <Settings size={18} /> },
+  ];
+}
 
 function UserManagementPage({
   title,
@@ -29,6 +65,7 @@ function UserManagementPage({
   role: string;
   fields: { key: string; label: string; type?: string }[];
 }) {
+  const navItems = useAdminNavItems();
   const { profile } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -65,7 +102,7 @@ function UserManagementPage({
       return;
     }
     setSaving(true);
-    const { error } = await supabase.functions.invoke("admin-create-user", {
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
       body: {
         ...form,
         role,
@@ -73,8 +110,11 @@ function UserManagementPage({
         teacher_id: form.teacher_id || undefined,
       },
     });
-    if (error) toast.error("Tạo thất bại: " + error.message);
-    else {
+    if (error) {
+      toast.error("Tạo thất bại: " + error.message);
+    } else if (data?.error) {
+      toast.error("Tạo thất bại: " + data.error);
+    } else {
       toast.success("Tạo thành công!");
       setDialogOpen(false);
       setForm({});
@@ -96,12 +136,12 @@ function UserManagementPage({
       return;
     }
 
-    // Update password if provided
     if (form.new_password) {
-      const { error: pwErr } = await supabase.functions.invoke("admin-create-user", {
+      const { data, error: pwErr } = await supabase.functions.invoke("admin-create-user", {
         body: { action: "update_user", user_id: editUser.id, new_password: form.new_password },
       });
       if (pwErr) toast.error("Đổi mật khẩu thất bại");
+      else if (data?.error) toast.error("Đổi mật khẩu thất bại: " + data.error);
       else toast.success("Đã đổi mật khẩu!");
     }
 
@@ -169,7 +209,7 @@ function UserManagementPage({
   );
 
   return (
-    <>
+    <DashboardLayout navItems={navItems} roleLabel="ADMIN" roleColor="bg-orange-500 text-primary-foreground">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) setForm({}); }}>
@@ -241,18 +281,18 @@ function UserManagementPage({
         </div>
       )}
 
-      {/* Edit Dialog */}
       <Dialog open={!!editUser} onOpenChange={(o) => { if (!o) { setEditUser(null); setForm({}); } }}>
         <DialogContent className="glass-card max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Chỉnh sửa thông tin</DialogTitle></DialogHeader>
           {formFields(true)}
         </DialogContent>
       </Dialog>
-    </>
+    </DashboardLayout>
   );
 }
 
 export default function AdminDashboard() {
+  const navItems = useAdminNavItems();
   const { profile } = useAuth();
   const [stats, setStats] = useState({ staff: 0, teachers: 0, clients: 0, leads: 0 });
   const [loading, setLoading] = useState(true);
@@ -291,47 +331,51 @@ export default function AdminDashboard() {
 
 export function AdminStaff() {
   return (
-    <DashboardLayout navItems={navItems} roleLabel="ADMIN" roleColor="bg-orange-500 text-primary-foreground">
-      <UserManagementPage
-        title="Quản lý Staff"
-        role="staff"
-        fields={[
-          { key: "full_name", label: "Họ tên *" },
-          { key: "phone", label: "Số điện thoại" },
-        ]}
-      />
-    </DashboardLayout>
+    <UserManagementPage
+      title="Quản lý Staff"
+      role="staff"
+      fields={[
+        { key: "full_name", label: "Họ tên *" },
+        { key: "phone", label: "Số điện thoại" },
+      ]}
+    />
   );
 }
 
 export function AdminTeachers() {
   return (
-    <DashboardLayout navItems={navItems} roleLabel="ADMIN" roleColor="bg-orange-500 text-primary-foreground">
-      <UserManagementPage
-        title="Quản lý Giáo viên"
-        role="teacher"
-        fields={[
-          { key: "full_name", label: "Họ tên *" },
-          { key: "phone", label: "Số điện thoại" },
-        ]}
-      />
-    </DashboardLayout>
+    <UserManagementPage
+      title="Quản lý Giáo viên"
+      role="teacher"
+      fields={[
+        { key: "full_name", label: "Họ tên *" },
+        { key: "phone", label: "Số điện thoại" },
+      ]}
+    />
   );
 }
 
 export function AdminClients() {
   return (
+    <UserManagementPage
+      title="Quản lý Học viên"
+      role="client"
+      fields={[
+        { key: "full_name", label: "Họ tên *" },
+        { key: "phone", label: "Số điện thoại" },
+        { key: "license_type", label: "Loại bằng lái" },
+        { key: "teacher_id", label: "Giáo viên phụ trách" },
+      ]}
+    />
+  );
+}
+
+export function AdminSettings() {
+  const navItems = useAdminNavItems();
+  return (
     <DashboardLayout navItems={navItems} roleLabel="ADMIN" roleColor="bg-orange-500 text-primary-foreground">
-      <UserManagementPage
-        title="Quản lý Học viên"
-        role="client"
-        fields={[
-          { key: "full_name", label: "Họ tên *" },
-          { key: "phone", label: "Số điện thoại" },
-          { key: "license_type", label: "Loại bằng lái" },
-          { key: "teacher_id", label: "Giáo viên phụ trách" },
-        ]}
-      />
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
+      <ChangeOwnPassword />
     </DashboardLayout>
   );
 }
