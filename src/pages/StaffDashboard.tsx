@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
+import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, ClipboardList, MessageCircle, LayoutDashboard, UserPlus, Pencil, Send, UserCheck } from "lucide-react";
+import { Users, ClipboardList, MessageCircle, LayoutDashboard, UserPlus, Pencil, Send, UserCheck, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +13,50 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { label: "Tổng quan", path: "/staff", icon: <LayoutDashboard size={18} /> },
-  { label: "Quản lý Học viên", path: "/staff/clients", icon: <Users size={18} /> },
-  { label: "Lead liên hệ", path: "/staff/leads", icon: <ClipboardList size={18} /> },
-  { label: "Chat trực tuyến", path: "/staff/chat", icon: <MessageCircle size={18} /> },
-];
+function useStaffNavBadges() {
+  const [newLeads, setNewLeads] = useState(0);
+  const [waitingChats, setWaitingChats] = useState(0);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const [l, c] = await Promise.all([
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+      ]);
+      setNewLeads(l.count || 0);
+      setWaitingChats(c.count || 0);
+    };
+    fetch();
+
+    const ch1 = supabase.channel("staff-badge-leads")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
+        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
+      }).subscribe();
+
+    const ch2 = supabase.channel("staff-badge-chats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
+        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
+      }).subscribe();
+
+    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
+  }, []);
+
+  return { newLeads, waitingChats };
+}
+
+function useStaffNavItems(): NavItem[] {
+  const { newLeads, waitingChats } = useStaffNavBadges();
+  return [
+    { label: "Tổng quan", path: "/staff", icon: <LayoutDashboard size={18} /> },
+    { label: "Quản lý Học viên", path: "/staff/clients", icon: <Users size={18} /> },
+    { label: "Lead liên hệ", path: "/staff/leads", icon: <ClipboardList size={18} />, badge: newLeads },
+    { label: "Chat trực tuyến", path: "/staff/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
+    { label: "Cài đặt", path: "/staff/settings", icon: <Settings size={18} /> },
+  ];
+}
 
 export default function StaffDashboard() {
+  const navItems = useStaffNavItems();
   const { profile } = useAuth();
   const [stats, setStats] = useState({ clients: 0, leads: 0, chats: 0 });
   const [loading, setLoading] = useState(true);
@@ -53,6 +90,7 @@ export default function StaffDashboard() {
 }
 
 export function StaffClients() {
+  const navItems = useStaffNavItems();
   const { profile } = useAuth();
   const [clients, setClients] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -81,11 +119,19 @@ export function StaffClients() {
   const handleCreate = async () => {
     if (!form.full_name || !form.email || !form.password) { toast.error("Điền đầy đủ thông tin"); return; }
     setSaving(true);
-    const { error } = await supabase.functions.invoke("admin-create-user", {
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
       body: { ...form, role: "client", admin_id: profile?.admin_id, teacher_id: form.teacher_id || undefined },
     });
-    if (error) toast.error("Tạo thất bại");
-    else { toast.success("Tạo thành công!"); setDialogOpen(false); setForm({}); fetchClients(); }
+    if (error) {
+      toast.error("Tạo thất bại: " + error.message);
+    } else if (data?.error) {
+      toast.error("Tạo thất bại: " + data.error);
+    } else {
+      toast.success("Tạo thành công!");
+      setDialogOpen(false);
+      setForm({});
+      fetchClients();
+    }
     setSaving(false);
   };
 
@@ -98,10 +144,11 @@ export function StaffClients() {
     if (error) { toast.error("Cập nhật thất bại"); setSaving(false); return; }
 
     if (form.new_password) {
-      const { error: pwErr } = await supabase.functions.invoke("admin-create-user", {
+      const { data, error: pwErr } = await supabase.functions.invoke("admin-create-user", {
         body: { action: "update_user", user_id: editUser.id, new_password: form.new_password },
       });
       if (pwErr) toast.error("Đổi mật khẩu thất bại");
+      else if (data?.error) toast.error("Đổi mật khẩu thất bại: " + data.error);
       else toast.success("Đã đổi mật khẩu!");
     }
 
@@ -224,6 +271,7 @@ export function StaffClients() {
 }
 
 export function StaffLeads() {
+  const navItems = useStaffNavItems();
   const { profile } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,9 +305,13 @@ export function StaffLeads() {
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
-    await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
-    setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
-    toast.success("Cập nhật trạng thái thành công!");
+    const { error } = await supabase.from("contact_leads").update({ status: status as any }).eq("id", id);
+    if (error) {
+      toast.error("Cập nhật thất bại: " + error.message);
+    } else {
+      setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status } : l));
+      toast.success("Cập nhật trạng thái thành công!");
+    }
   };
 
   const handleConvert = async () => {
@@ -268,7 +320,7 @@ export function StaffLeads() {
       return;
     }
     setConverting(true);
-    const { error } = await supabase.functions.invoke("admin-create-user", {
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
       body: {
         full_name: convertLead.name,
         phone: convertLead.phone,
@@ -282,6 +334,8 @@ export function StaffLeads() {
     });
     if (error) {
       toast.error("Chuyển đổi thất bại: " + error.message);
+    } else if (data?.error) {
+      toast.error("Chuyển đổi thất bại: " + data.error);
     } else {
       toast.success("Đã chuyển lead thành học viên!");
       await supabase.from("contact_leads").update({ status: "converted" as any }).eq("id", convertLead.id);
@@ -343,7 +397,6 @@ export function StaffLeads() {
         </div>
       )}
 
-      {/* Convert Lead to Student Dialog */}
       <Dialog open={!!convertLead} onOpenChange={(o) => { if (!o) { setConvertLead(null); setConvertForm({}); } }}>
         <DialogContent className="glass-card">
           <DialogHeader><DialogTitle>Chuyển lead thành học viên</DialogTitle></DialogHeader>
@@ -378,6 +431,7 @@ export function StaffLeads() {
 }
 
 export function StaffChat() {
+  const navItems = useStaffNavItems();
   const { profile } = useAuth();
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSession, setActiveSession] = useState<any>(null);
@@ -407,7 +461,7 @@ export function StaffChat() {
     };
     fetchMsgs();
 
-    const channel = supabase.channel(`staff-msg-${activeSession.id}`)
+    const channel = supabase.channel(`msg-${activeSession.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `session_id=eq.${activeSession.id}` }, (payload) => {
         setMessages((prev) => {
           if (prev.some((m) => m.id === (payload.new as any).id)) return prev;
@@ -430,7 +484,6 @@ export function StaffChat() {
     if (!activeSession) return;
     await supabase.from("chat_sessions").update({ status: "closed" }).eq("id", activeSession.id);
     setActiveSession(null);
-    toast.success("Đã đóng phiên chat");
   };
 
   const sendMessage = async () => {
@@ -446,17 +499,11 @@ export function StaffChat() {
     <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Chat trực tuyến</h1>
       <div className="flex gap-4 h-[calc(100vh-200px)]">
-        <div className="w-80 glass-card rounded-2xl overflow-y-auto flex-shrink-0 hidden md:block">
+        <div className="w-80 glass-card rounded-2xl overflow-y-auto flex-shrink-0">
           <div className="p-4 border-b border-border/50 font-semibold text-foreground">Phiên chat ({sessions.length})</div>
           {sessions.map((s) => (
-            <div
-              key={s.id}
-              onClick={() => setActiveSession(s)}
-              className={cn(
-                "cursor-pointer border-b border-border/30 p-4 hover:bg-muted/30 transition-colors",
-                activeSession?.id === s.id && "bg-muted/50"
-              )}
-            >
+            <div key={s.id} onClick={() => setActiveSession(s)}
+              className={cn("cursor-pointer border-b border-border/30 p-4 hover:bg-muted/30 transition-colors", activeSession?.id === s.id && "bg-muted/50")}>
               <div className="flex items-center justify-between">
                 <span className="font-medium text-foreground text-sm">{s.visitor_name || "Khách ẩn danh"}</span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${s.status === "waiting" ? "gradient-secondary text-primary-foreground" : "gradient-accent text-accent-foreground"}`}>
@@ -484,32 +531,19 @@ export function StaffChat() {
                 </div>
                 <Button variant="destructive" size="sm" className="rounded-xl" onClick={closeSession}>Đóng phiên</Button>
               </div>
-
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.map((m) => (
                   <div key={m.id} className={cn("flex", m.sender_type === "staff" ? "justify-end" : "justify-start")}>
-                    <div className={cn(
-                      "max-w-xs rounded-2xl px-4 py-2 text-sm",
-                      m.sender_type === "staff" ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground"
-                    )}>
+                    <div className={cn("max-w-xs rounded-2xl px-4 py-2 text-sm", m.sender_type === "staff" ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground")}>
                       {m.content}
                     </div>
                   </div>
                 ))}
                 <div ref={bottomRef} />
               </div>
-
               <div className="border-t border-border/50 p-4 flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder="Nhập tin nhắn..."
-                  className="rounded-xl"
-                />
-                <Button variant="hero" size="icon" className="rounded-xl" onClick={sendMessage}>
-                  <Send size={18} />
-                </Button>
+                <Input value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Nhập tin nhắn..." className="rounded-xl" />
+                <Button variant="hero" size="icon" className="rounded-xl" onClick={sendMessage}><Send size={18} /></Button>
               </div>
             </>
           ) : (
@@ -519,6 +553,16 @@ export function StaffChat() {
           )}
         </div>
       </div>
+    </DashboardLayout>
+  );
+}
+
+export function StaffSettings() {
+  const navItems = useStaffNavItems();
+  return (
+    <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
+      <ChangeOwnPassword />
     </DashboardLayout>
   );
 }

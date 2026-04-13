@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { TableSkeleton, EmptyState } from "@/components/shared/StatCard";
+import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, LayoutDashboard, Save } from "lucide-react";
+import { Users, LayoutDashboard, Save, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Học viên của tôi", path: "/teacher", icon: <LayoutDashboard size={18} /> },
+  { label: "Cài đặt", path: "/teacher/settings", icon: <Settings size={18} /> },
 ];
 
 export default function TeacherDashboard() {
@@ -77,6 +79,15 @@ export default function TeacherDashboard() {
   );
 }
 
+export function TeacherSettings() {
+  return (
+    <DashboardLayout navItems={navItems} roleLabel="GIÁO VIÊN" roleColor="gradient-accent text-accent-foreground">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
+      <ChangeOwnPassword />
+    </DashboardLayout>
+  );
+}
+
 function StudentProgress({ student, onBack, teacherId }: { student: any; onBack: () => void; teacherId: string }) {
   const [progress, setProgress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -96,7 +107,7 @@ function StudentProgress({ student, onBack, teacherId }: { student: any; onBack:
         .from("training_progress")
         .select("*")
         .eq("client_id", student.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setProgress(data);
@@ -186,7 +197,6 @@ function StudentProgress({ student, onBack, teacherId }: { student: any; onBack:
         </div>
       </div>
 
-      {/* Scores */}
       <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-4">
         {[
           { key: "theory_score", label: "Lý Thuyết" },
@@ -208,7 +218,6 @@ function StudentProgress({ student, onBack, teacherId }: { student: any; onBack:
         ))}
       </div>
 
-      {/* Milestones */}
       <div className="glass-card rounded-2xl p-6 mb-6">
         <h3 className="mb-4 font-semibold text-foreground">Mốc lịch trình học</h3>
         <div className="space-y-3">
@@ -239,7 +248,6 @@ function StudentProgress({ student, onBack, teacherId }: { student: any; onBack:
         </div>
       </div>
 
-      {/* Notes */}
       <div className="glass-card rounded-2xl p-6 mb-6">
         <Label>Ghi chú giáo viên</Label>
         <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-2 rounded-xl" rows={4} />

@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { TableSkeleton } from "@/components/shared/StatCard";
+import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, Bell, User, BookOpen, CheckCircle, Clock } from "lucide-react";
+import { LayoutDashboard, Bell, User, BookOpen, CheckCircle, Clock, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
   { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
+  { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
 ];
 
 export default function ClientDashboard() {
@@ -24,11 +26,11 @@ export default function ClientDashboard() {
         .from("training_progress")
         .select("*")
         .eq("client_id", profile.id)
-        .single();
+        .maybeSingle();
       setProgress(prog);
 
       if (profile.teacher_id) {
-        const { data: t } = await supabase.from("profiles").select("full_name, phone, email").eq("id", profile.teacher_id).single();
+        const { data: t } = await supabase.from("profiles").select("full_name, phone, email").eq("id", profile.teacher_id).maybeSingle();
         setTeacher(t);
       }
       setLoading(false);
@@ -68,7 +70,6 @@ export default function ClientDashboard() {
 
   return (
     <DashboardLayout navItems={navItems} roleLabel="HỌC VIÊN" roleColor="bg-blue-500 text-primary-foreground">
-      {/* Profile card */}
       <div className="glass-card rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 rounded-full gradient-primary flex items-center justify-center text-2xl font-bold text-primary-foreground">
@@ -93,7 +94,6 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Scores */}
       <h2 className="mb-4 text-lg font-bold text-foreground flex items-center gap-2">
         <BookOpen size={20} /> Tiến trình học
       </h2>
@@ -107,7 +107,6 @@ export default function ClientDashboard() {
             <ScoreCircle label="Đường Trường" score={progress.road_test_score} />
           </div>
 
-          {/* Timeline */}
           {progress.schedule_milestones && progress.schedule_milestones.length > 0 && (
             <div className="glass-card rounded-2xl p-6">
               <h3 className="mb-4 font-semibold text-foreground flex items-center gap-2">
@@ -162,7 +161,6 @@ export function ClientNotifications() {
       setNotifications(data || []);
       setLoading(false);
 
-      // Mark unread as read
       const unread = data?.filter((n) => !n.is_read).map((n) => n.id) || [];
       if (unread.length > 0) {
         await supabase.from("notifications").update({ is_read: true }).in("id", unread);
@@ -189,6 +187,15 @@ export function ClientNotifications() {
           ))}
         </div>
       )}
+    </DashboardLayout>
+  );
+}
+
+export function ClientSettings() {
+  return (
+    <DashboardLayout navItems={navItems} roleLabel="HỌC VIÊN" roleColor="bg-blue-500 text-primary-foreground">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
+      <ChangeOwnPassword />
     </DashboardLayout>
   );
 }
