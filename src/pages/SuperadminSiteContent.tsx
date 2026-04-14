@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Globe } from "lucide-react";
+import { Save, Plus, Trash2, Globe, LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings } from "lucide-react";
 
 interface StatItem {
   icon: string;
