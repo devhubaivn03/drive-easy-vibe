@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Forbidden from "./pages/Forbidden";
 
 import SuperadminDashboard, { SuperadminUsers, SuperadminLeads, SuperadminChat, SuperadminSettings } from "./pages/SuperadminDashboard";
+import SuperadminSiteContent from "./pages/SuperadminSiteContent";
 import AdminDashboard, { AdminStaff, AdminTeachers, AdminClients, AdminSettings } from "./pages/AdminDashboard";
 import AdminLeads from "./pages/AdminLeads";
 import AdminChat from "./pages/AdminChat";
