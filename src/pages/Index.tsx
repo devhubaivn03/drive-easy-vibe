@@ -73,9 +73,9 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16">
-        <div className="absolute -top-20 left-1/4 h-96 w-96 rounded-full gradient-primary opacity-10 blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full gradient-secondary opacity-10 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full gradient-accent opacity-10 blur-3xl" />
+        <div className="absolute -top-20 left-1/4 h-96 w-96 rounded-full gradient-primary opacity-20 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full gradient-secondary opacity-20 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full gradient-accent opacity-15 blur-3xl" />
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
