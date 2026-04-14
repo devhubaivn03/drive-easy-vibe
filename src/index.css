@@ -160,7 +160,7 @@
 @layer utilities {
   /* Dot grid background pattern (similar to FlowPDF) */
   .grid-bg {
-    background-image: radial-gradient(circle, hsla(var(--foreground) / 0.08) 1px, transparent 1px);
+    background-image: radial-gradient(circle, hsla(var(--foreground) / 0.12) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
