@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Forbidden from "./pages/Forbidden";
 
 import SuperadminDashboard, { SuperadminUsers, SuperadminLeads, SuperadminChat, SuperadminSettings } from "./pages/SuperadminDashboard";
+import SuperadminSiteContent from "./pages/SuperadminSiteContent";
 import AdminDashboard, { AdminStaff, AdminTeachers, AdminClients, AdminSettings } from "./pages/AdminDashboard";
 import AdminLeads from "./pages/AdminLeads";
 import AdminChat from "./pages/AdminChat";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/superadmin/users" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminUsers /></ProtectedRoute>} />
             <Route path="/superadmin/leads" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminLeads /></ProtectedRoute>} />
             <Route path="/superadmin/chat" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminChat /></ProtectedRoute>} />
+            <Route path="/superadmin/site-content" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSiteContent /></ProtectedRoute>} />
             <Route path="/superadmin/settings" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSettings /></ProtectedRoute>} />
 
             {/* Admin */}

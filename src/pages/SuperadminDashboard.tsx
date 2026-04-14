@@ -51,6 +51,7 @@ function useNavItems(): NavItem[] {
     { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
     { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
     { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
+    { label: "Nội dung Trang chủ", path: "/superadmin/site-content", icon: <Pencil size={18} /> },
     { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
   ];
 }
