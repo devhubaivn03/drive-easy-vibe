@@ -123,8 +123,8 @@ function QuestionBankTab() {
 
         {/* Mini Excel preview */}
         <div className="mb-4 rounded-lg border border-border overflow-hidden bg-background/50">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border-b border-border">
-            <FileSpreadsheet size={14} className="text-emerald-500" />
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border-b border-border">
+            <FileSpreadsheet size={14} className="text-primary" />
             <span className="text-xs font-medium text-foreground">Ví dụ file Excel mẫu</span>
           </div>
           <div className="overflow-x-auto">
