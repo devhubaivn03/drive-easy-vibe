@@ -19,6 +19,9 @@ import AdminChat from "./pages/AdminChat";
 import StaffDashboard, { StaffClients, StaffLeads, StaffChat, StaffSettings } from "./pages/StaffDashboard";
 import TeacherDashboard, { TeacherSettings } from "./pages/TeacherDashboard";
 import ClientDashboard, { ClientNotifications, ClientSettings } from "./pages/ClientDashboard";
+import ClientPractice from "./pages/ClientPractice";
+import ClientExam from "./pages/ClientExam";
+import SuperadminQuestions from "./pages/SuperadminQuestions";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +43,7 @@ const App = () => (
             <Route path="/superadmin/leads" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminLeads /></ProtectedRoute>} />
             <Route path="/superadmin/chat" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminChat /></ProtectedRoute>} />
             <Route path="/superadmin/site-content" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSiteContent /></ProtectedRoute>} />
+            <Route path="/superadmin/questions" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminQuestions /></ProtectedRoute>} />
             <Route path="/superadmin/settings" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSettings /></ProtectedRoute>} />
 
             {/* Admin */}
@@ -64,6 +68,8 @@ const App = () => (
 
             {/* Client */}
             <Route path="/client" element={<ProtectedRoute allowedRoles={["client"]}><ClientDashboard /></ProtectedRoute>} />
+            <Route path="/client/practice" element={<ProtectedRoute allowedRoles={["client"]}><ClientPractice /></ProtectedRoute>} />
+            <Route path="/client/exam" element={<ProtectedRoute allowedRoles={["client"]}><ClientExam /></ProtectedRoute>} />
             <Route path="/client/notifications" element={<ProtectedRoute allowedRoles={["client"]}><ClientNotifications /></ProtectedRoute>} />
             <Route path="/client/settings" element={<ProtectedRoute allowedRoles={["client"]}><ClientSettings /></ProtectedRoute>} />
 
