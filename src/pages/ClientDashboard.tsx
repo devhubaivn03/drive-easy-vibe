@@ -4,11 +4,13 @@ import { TableSkeleton } from "@/components/shared/StatCard";
 import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, Bell, User, BookOpen, CheckCircle, Clock, Settings } from "lucide-react";
+import { LayoutDashboard, Bell, User, BookOpen, CheckCircle, Clock, Settings, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
+  { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
+  { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
   { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
   { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
 ];

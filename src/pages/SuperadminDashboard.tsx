@@ -3,7 +3,7 @@ import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
 import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
-import { Users, GraduationCap, UserPlus, ClipboardList, Settings, LayoutDashboard, Pencil, KeyRound, MessageCircle, UserCheck, Send } from "lucide-react";
+import { Users, GraduationCap, UserPlus, ClipboardList, Settings, LayoutDashboard, Pencil, KeyRound, MessageCircle, UserCheck, Send, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,7 @@ function useNavItems(): NavItem[] {
     { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
     { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
     { label: "Nội dung Trang chủ", path: "/superadmin/site-content", icon: <Pencil size={18} /> },
+    { label: "Quản lý Câu hỏi", path: "/superadmin/questions", icon: <BookOpenCheck size={18} /> },
     { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
   ];
 }
