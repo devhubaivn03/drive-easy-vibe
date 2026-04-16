@@ -121,6 +121,53 @@ function QuestionBankTab() {
         </div>
         <p className="text-sm text-muted-foreground mb-3">Cấu trúc cột: Câu hỏi | Đáp án 1 | Đáp án 2 | Đáp án 3 | Đáp án 4 (có thể trống) | Hình ảnh (tên file) | Đáp án đúng (1-4)</p>
 
+        {/* Mini Excel preview */}
+        <div className="mb-4 rounded-lg border border-border overflow-hidden bg-background/50">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border-b border-border">
+            <FileSpreadsheet size={14} className="text-primary" />
+            <span className="text-xs font-medium text-foreground">Ví dụ file Excel mẫu</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/60">
+                <tr className="text-foreground">
+                  <th className="p-1.5 w-8 text-center text-muted-foreground font-normal border-r border-border"></th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">A · Câu hỏi</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">B · Đáp án 1</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">C · Đáp án 2</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">D · Đáp án 3</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">E · Đáp án 4</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">F · Hình ảnh</th>
+                  <th className="p-1.5 text-center font-medium">G · Đúng</th>
+                </tr>
+              </thead>
+              <tbody className="text-muted-foreground">
+                <tr className="border-t border-border">
+                  <td className="p-1.5 text-center bg-muted/40 border-r border-border">1</td>
+                  <td className="p-1.5 border-r border-border">Biển báo nào là biển cấm?</td>
+                  <td className="p-1.5 border-r border-border">Hình tròn viền đỏ</td>
+                  <td className="p-1.5 border-r border-border">Hình tam giác</td>
+                  <td className="p-1.5 border-r border-border">Hình vuông</td>
+                  <td className="p-1.5 border-r border-border">Hình chữ nhật</td>
+                  <td className="p-1.5 border-r border-border font-mono text-[10px]">cau001.jpg</td>
+                  <td className="p-1.5 text-center font-bold text-primary">1</td>
+                </tr>
+                <tr className="border-t border-border">
+                  <td className="p-1.5 text-center bg-muted/40 border-r border-border">2</td>
+                  <td className="p-1.5 border-r border-border">Tốc độ tối đa trong khu dân cư?</td>
+                  <td className="p-1.5 border-r border-border">40 km/h</td>
+                  <td className="p-1.5 border-r border-border">50 km/h</td>
+                  <td className="p-1.5 border-r border-border">60 km/h</td>
+                  <td className="p-1.5 border-r border-border italic text-muted-foreground/60">(trống)</td>
+                  <td className="p-1.5 border-r border-border italic text-muted-foreground/60">(trống)</td>
+                  <td className="p-1.5 text-center font-bold text-primary">2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="px-3 py-1.5 text-[11px] text-muted-foreground bg-muted/30 border-t border-border">💡 Cột Đáp án 4 và Hình ảnh có thể để trống. Cột Đáp án đúng nhập số 1-4.</p>
+        </div>
+
         <label className="block border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-colors">
           <input ref={inputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
           <FileSpreadsheet size={40} className="mx-auto mb-3 text-muted-foreground" />
@@ -283,6 +330,62 @@ function ExamSetsTab() {
           <a href="/templates/mau_de_thi.xlsx" download><Button variant="outline" size="sm"><Download size={16} className="mr-2" /> Tải file mẫu</Button></a>
         </div>
         <p className="text-sm text-muted-foreground mb-3">File Excel có nhiều sheet, tên sheet = tên mã đề (vd "Đề 01"). Cột giống ngân hàng câu hỏi.</p>
+
+        {/* Mini Excel preview with multiple sheets */}
+        <div className="mb-4 rounded-lg border border-border overflow-hidden bg-background/50">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border-b border-border">
+            <FileSpreadsheet size={14} className="text-primary" />
+            <span className="text-xs font-medium text-foreground">Ví dụ file Excel mẫu (mỗi sheet = 1 mã đề)</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/60">
+                <tr>
+                  <th className="p-1.5 w-8 text-center text-muted-foreground font-normal border-r border-border"></th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">A · Câu hỏi</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">B · Đáp án 1</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">C · Đáp án 2</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">D · Đáp án 3</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">E · Đáp án 4</th>
+                  <th className="p-1.5 text-left border-r border-border font-medium">F · Hình ảnh</th>
+                  <th className="p-1.5 text-center font-medium">G · Đúng</th>
+                </tr>
+              </thead>
+              <tbody className="text-muted-foreground">
+                <tr className="border-t border-border">
+                  <td className="p-1.5 text-center bg-muted/40 border-r border-border">1</td>
+                  <td className="p-1.5 border-r border-border">Khi đèn vàng bật sáng, người lái xe phải?</td>
+                  <td className="p-1.5 border-r border-border">Dừng trước vạch</td>
+                  <td className="p-1.5 border-r border-border">Tăng tốc qua</td>
+                  <td className="p-1.5 border-r border-border">Rẽ phải</td>
+                  <td className="p-1.5 border-r border-border italic text-muted-foreground/60">(trống)</td>
+                  <td className="p-1.5 border-r border-border italic text-muted-foreground/60">(trống)</td>
+                  <td className="p-1.5 text-center font-bold text-primary">1</td>
+                </tr>
+                <tr className="border-t border-border">
+                  <td className="p-1.5 text-center bg-muted/40 border-r border-border">2</td>
+                  <td className="p-1.5 border-r border-border">Khoảng cách an toàn ở 60 km/h?</td>
+                  <td className="p-1.5 border-r border-border">15m</td>
+                  <td className="p-1.5 border-r border-border">35m</td>
+                  <td className="p-1.5 border-r border-border">55m</td>
+                  <td className="p-1.5 border-r border-border">75m</td>
+                  <td className="p-1.5 border-r border-border font-mono text-[10px]">cau002.jpg</td>
+                  <td className="p-1.5 text-center font-bold text-primary">2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {/* Sheet tabs mimic Excel */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-muted/40 border-t border-border overflow-x-auto">
+            <span className="text-[10px] text-muted-foreground mr-1">Sheets:</span>
+            <span className="px-2 py-0.5 text-[10px] rounded bg-background border border-border font-medium text-foreground">Đề 01</span>
+            <span className="px-2 py-0.5 text-[10px] rounded text-muted-foreground">Đề 02</span>
+            <span className="px-2 py-0.5 text-[10px] rounded text-muted-foreground">Đề 03</span>
+            <span className="px-2 py-0.5 text-[10px] rounded text-muted-foreground">Đề 04</span>
+            <span className="text-[10px] text-muted-foreground ml-1">…</span>
+          </div>
+          <p className="px-3 py-1.5 text-[11px] text-muted-foreground bg-muted/30 border-t border-border">💡 Mỗi sheet sẽ tạo ra 1 mã đề riêng. Tên sheet chính là tên mã đề hiển thị cho học viên.</p>
+        </div>
 
         <label className="block border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-colors">
           <input ref={inputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
