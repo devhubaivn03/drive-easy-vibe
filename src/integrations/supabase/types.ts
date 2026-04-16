@@ -129,6 +129,112 @@ export type Database = {
           },
         ]
       }
+      exam_attempts: {
+        Row: {
+          answers: Json
+          client_id: string
+          exam_set_id: string
+          id: string
+          score: number
+          submitted_at: string
+          time_spent_seconds: number
+          total_questions: number
+        }
+        Insert: {
+          answers?: Json
+          client_id: string
+          exam_set_id: string
+          id?: string
+          score?: number
+          submitted_at?: string
+          time_spent_seconds?: number
+          total_questions?: number
+        }
+        Update: {
+          answers?: Json
+          client_id?: string
+          exam_set_id?: string
+          id?: string
+          score?: number
+          submitted_at?: string
+          time_spent_seconds?: number
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_attempts_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_set_questions: {
+        Row: {
+          answer_1: string
+          answer_2: string
+          answer_3: string | null
+          answer_4: string | null
+          correct_answer: number
+          exam_set_id: string
+          id: string
+          image_url: string | null
+          order_index: number
+          question_text: string
+        }
+        Insert: {
+          answer_1: string
+          answer_2: string
+          answer_3?: string | null
+          answer_4?: string | null
+          correct_answer: number
+          exam_set_id: string
+          id?: string
+          image_url?: string | null
+          order_index?: number
+          question_text: string
+        }
+        Update: {
+          answer_1?: string
+          answer_2?: string
+          answer_3?: string | null
+          answer_4?: string | null
+          correct_answer?: number
+          exam_set_id?: string
+          id?: string
+          image_url?: string | null
+          order_index?: number
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_set_questions_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_sets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -227,6 +333,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      questions: {
+        Row: {
+          answer_1: string
+          answer_2: string
+          answer_3: string | null
+          answer_4: string | null
+          correct_answer: number
+          created_at: string
+          id: string
+          image_url: string | null
+          question_text: string
+        }
+        Insert: {
+          answer_1: string
+          answer_2: string
+          answer_3?: string | null
+          answer_4?: string | null
+          correct_answer: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          question_text: string
+        }
+        Update: {
+          answer_1?: string
+          answer_2?: string
+          answer_3?: string | null
+          answer_4?: string | null
+          correct_answer?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          question_text?: string
+        }
+        Relationships: []
       }
       site_content: {
         Row: {
