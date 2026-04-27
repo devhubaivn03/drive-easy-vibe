@@ -229,14 +229,18 @@ export function StaffClients() {
             </tr></thead>
             <tbody>{filtered.map((c) => (
               <tr key={c.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
-                <td className="p-4 font-medium text-foreground">{c.full_name}</td>
+                <td className="p-4 font-medium text-foreground">
+                  <div className="flex items-center gap-2">
+                    <span>{c.full_name}</span>
+                    <ExamScoresDialogButton clientId={c.id} clientName={c.full_name} userId={profile?.id || ""} />
+                  </div>
+                </td>
                 <td className="p-4 text-muted-foreground">{c.email}</td>
                 <td className="p-4 text-muted-foreground">{c.phone || "—"}</td>
                 <td className="p-4"><span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">{c.license_type || "—"}</span></td>
                 <td className="p-4 text-muted-foreground">{teachers.find(t => t.id === c.teacher_id)?.full_name || "—"}</td>
                 <td className="p-4">
                   <div className="flex gap-1">
-                    <ExamScoresDialogButton clientId={c.id} clientName={c.full_name} userId={profile?.id || ""} />
                     <Button variant="ghost" size="icon" onClick={() => {
                       setEditUser(c);
                       setForm({ full_name: c.full_name, phone: c.phone || "", license_type: c.license_type || "", teacher_id: c.teacher_id || "" });

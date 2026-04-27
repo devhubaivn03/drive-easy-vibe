@@ -83,8 +83,11 @@ export function ExamScoresDisplay({ data }: { data: ExamResultData | null }) {
             return (
               <div key={m.key} className="flex items-center">
                 <div className="flex flex-col items-center w-28">
-                  <div className={cn("h-14 w-14 rounded-full border-2 flex items-center justify-center transition-all", color)}>
-                    {status === "pass" ? <CheckCircle2 size={26} /> : status === "fail" ? <XCircle size={26} /> : <Award size={22} />}
+                  <div
+                    className={cn("h-14 w-14 border-2 flex items-center justify-center transition-all", color)}
+                    style={{ clipPath: "polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)" }}
+                  >
+                    {status === "pass" ? <CheckCircle2 size={24} /> : status === "fail" ? <XCircle size={24} /> : <Award size={22} />}
                   </div>
                   <p className="mt-2 text-xs font-medium text-foreground text-center">{m.label}</p>
                   <p className={cn("text-xs font-bold mt-0.5", status === "pass" ? "text-green-600 dark:text-green-400" : status === "fail" ? "text-destructive" : "text-muted-foreground")}>
