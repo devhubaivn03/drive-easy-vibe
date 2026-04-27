@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { LayoutDashboard, Bell, User, BookOpen, CheckCircle, Clock, Settings, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExamScoresDisplay, useExamResult } from "@/components/shared/ExamScores";
 
 const navItems = [
   { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
@@ -20,6 +21,7 @@ export default function ClientDashboard() {
   const [progress, setProgress] = useState<any>(null);
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { data: examData } = useExamResult(profile?.id);
 
   useEffect(() => {
     if (!profile) return;
