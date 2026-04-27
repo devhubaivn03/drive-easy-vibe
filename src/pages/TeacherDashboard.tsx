@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ExamScoresEditor } from "@/components/shared/ExamScores";
 
 const navItems = [
   { label: "Học viên của tôi", path: "/teacher", icon: <LayoutDashboard size={18} /> },
@@ -251,6 +252,11 @@ function StudentProgress({ student, onBack, teacherId }: { student: any; onBack:
       <div className="glass-card rounded-2xl p-6 mb-6">
         <Label>Ghi chú giáo viên</Label>
         <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="mt-2 rounded-xl" rows={4} />
+      </div>
+
+      <div className="mb-6">
+        <h3 className="mb-3 font-semibold text-foreground">Điểm thi</h3>
+        <ExamScoresEditor clientId={student.id} userId={teacherId} />
       </div>
 
       <Button variant="hero" size="lg" className="rounded-xl" onClick={handleSave} disabled={saving}>
