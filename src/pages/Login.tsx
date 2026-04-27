@@ -28,19 +28,26 @@ export default function Login() {
       return;
     }
 
-    // Fetch profile to get role and redirect
+    // Fetch profile to get role and redirect (with retry to handle propagation delay)
     const { supabase } = await import("@/lib/supabase");
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+      let profile = null;
+      for (let i = 0; i < 5; i++) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (data) { profile = data; break; }
+        await new Promise((r) => setTimeout(r, 300));
+      }
 
       if (profile) {
         toast.success("Đăng nhập thành công!");
-        navigate(getRoleDashboardPath(profile.role));
+        navigate(getRoleDashboardPath(profile.role), { replace: true });
+      } else {
+        toast.error("Không tìm thấy hồ sơ người dùng. Vui lòng liên hệ quản trị viên.");
       }
     }
     setIsLoading(false);

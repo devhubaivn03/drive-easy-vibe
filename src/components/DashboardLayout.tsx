@@ -181,14 +181,18 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground">
+            <button
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-3 rounded-full pl-1 pr-3 py-1 hover:bg-muted/60 transition-colors"
+              title="Xem hồ sơ"
+            >
+              <div className="h-9 w-9 rounded-full gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground ring-2 ring-transparent hover:ring-primary/40 transition-all">
                 {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
               </div>
               <span className="hidden text-sm font-medium text-foreground md:block">
                 {profile?.full_name}
               </span>
-            </div>
+            </button>
           </div>
         </header>
 
