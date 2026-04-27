@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { LayoutDashboard, Bell, User, BookOpen, CheckCircle, Clock, Settings, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExamScoresDisplay, useExamResult } from "@/components/shared/ExamScores";
 
 const navItems = [
   { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
@@ -20,6 +21,7 @@ export default function ClientDashboard() {
   const [progress, setProgress] = useState<any>(null);
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { data: examData } = useExamResult(profile?.id);
 
   useEffect(() => {
     if (!profile) return;
@@ -109,27 +111,46 @@ export default function ClientDashboard() {
             <ScoreCircle label="Đường Trường" score={progress.road_test_score} />
           </div>
 
+          <div className="mb-6">
+            <ExamScoresDisplay data={examData} />
+          </div>
+
           {progress.schedule_milestones && progress.schedule_milestones.length > 0 && (
             <div className="glass-card rounded-2xl p-6">
               <h3 className="mb-4 font-semibold text-foreground flex items-center gap-2">
                 <Clock size={18} /> Lịch trình học
               </h3>
-              <div className="space-y-4 ml-4 border-l-2 border-border pl-6">
-                {progress.schedule_milestones.map((m: any, i: number) => (
-                  <div key={i} className="relative">
-                    <div className={cn(
-                      "absolute -left-[31px] top-1 h-4 w-4 rounded-full border-2",
-                      m.completed ? "gradient-accent border-accent" : "bg-background border-border"
-                    )} />
-                    <div className="flex items-center gap-2">
-                      {m.completed && <CheckCircle size={16} className="text-green-500" />}
-                      <span className={cn("font-medium", m.completed ? "text-foreground" : "text-muted-foreground")}>
-                        {m.title}
-                      </span>
+              <div className="overflow-x-auto pb-2">
+                <div className="flex items-start gap-2 min-w-max">
+                  {progress.schedule_milestones.map((m: any, i: number) => (
+                    <div key={i} className="flex items-center">
+                      <div className="flex flex-col items-center w-32">
+                        <div className={cn(
+                          "h-12 w-12 rounded-full border-2 flex items-center justify-center transition-all",
+                          m.completed
+                            ? "gradient-accent border-accent text-accent-foreground"
+                            : "bg-background border-border text-muted-foreground"
+                        )}>
+                          {m.completed ? <CheckCircle size={22} /> : <Clock size={20} />}
+                        </div>
+                        <p className={cn("mt-2 text-xs font-medium text-center", m.completed ? "text-foreground" : "text-muted-foreground")}>
+                          {m.title}
+                        </p>
+                        {m.date && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {new Date(m.date).toLocaleDateString("vi-VN")}
+                          </p>
+                        )}
+                      </div>
+                      {i < progress.schedule_milestones.length - 1 && (
+                        <div className={cn(
+                          "h-0.5 w-10 mt-6 transition-colors",
+                          m.completed ? "bg-accent" : "bg-border"
+                        )} />
+                      )}
                     </div>
-                    {m.date && <p className="text-xs text-muted-foreground mt-1">{new Date(m.date).toLocaleDateString("vi-VN")}</p>}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}

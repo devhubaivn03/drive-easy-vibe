@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
 
 function useStaffNavBadges() {
   const [newLeads, setNewLeads] = useState(0);
@@ -233,10 +234,15 @@ export function StaffClients() {
                 <td className="p-4 text-muted-foreground">{c.phone || "—"}</td>
                 <td className="p-4"><span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">{c.license_type || "—"}</span></td>
                 <td className="p-4 text-muted-foreground">{teachers.find(t => t.id === c.teacher_id)?.full_name || "—"}</td>
-                <td className="p-4"><Button variant="ghost" size="icon" onClick={() => {
-                  setEditUser(c);
-                  setForm({ full_name: c.full_name, phone: c.phone || "", license_type: c.license_type || "", teacher_id: c.teacher_id || "" });
-                }}><Pencil size={16} /></Button></td>
+                <td className="p-4">
+                  <div className="flex gap-1">
+                    <ExamScoresDialogButton clientId={c.id} clientName={c.full_name} userId={profile?.id || ""} />
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setEditUser(c);
+                      setForm({ full_name: c.full_name, phone: c.phone || "", license_type: c.license_type || "", teacher_id: c.teacher_id || "" });
+                    }}><Pencil size={16} /></Button>
+                  </div>
+                </td>
               </tr>
             ))}</tbody>
           </table>

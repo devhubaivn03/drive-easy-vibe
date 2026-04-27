@@ -170,6 +170,48 @@ export type Database = {
           },
         ]
       }
+      exam_results: {
+        Row: {
+          client_id: string
+          created_at: string
+          graduation_passed: boolean | null
+          id: string
+          notes: string | null
+          road_score: number | null
+          simulation_score: number | null
+          theory_score: number | null
+          track_score: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          graduation_passed?: boolean | null
+          id?: string
+          notes?: string | null
+          road_score?: number | null
+          simulation_score?: number | null
+          theory_score?: number | null
+          track_score?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          graduation_passed?: boolean | null
+          id?: string
+          notes?: string | null
+          road_score?: number | null
+          simulation_score?: number | null
+          theory_score?: number | null
+          track_score?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       exam_set_questions: {
         Row: {
           answer_1: string
