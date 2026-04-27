@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
 
 function useAdminNavBadges() {
   const [newLeads, setNewLeads] = useState(0);
@@ -267,12 +268,17 @@ function UserManagementPage({
                   {role === "client" && <td className="p-4"><span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">{u.license_type || "—"}</span></td>}
                   {role === "client" && <td className="p-4 text-muted-foreground">{teachers.find(t => t.id === u.teacher_id)?.full_name || "—"}</td>}
                   <td className="p-4">
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setEditUser(u);
-                      setForm({ full_name: u.full_name, phone: u.phone || "", license_type: u.license_type || "", teacher_id: u.teacher_id || "" });
-                    }}>
-                      <Pencil size={16} />
-                    </Button>
+                    <div className="flex gap-1">
+                      {role === "client" && (
+                        <ExamScoresDialogButton clientId={u.id} clientName={u.full_name} userId={profile?.id || ""} />
+                      )}
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        setEditUser(u);
+                        setForm({ full_name: u.full_name, phone: u.phone || "", license_type: u.license_type || "", teacher_id: u.teacher_id || "" });
+                      }}>
+                        <Pencil size={16} />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
