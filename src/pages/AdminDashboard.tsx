@@ -262,16 +262,20 @@ function UserManagementPage({
             <tbody>
               {filtered.map((u) => (
                 <tr key={u.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
-                  <td className="p-4 font-medium text-foreground">{u.full_name}</td>
+                  <td className="p-4 font-medium text-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>{u.full_name}</span>
+                      {role === "client" && (
+                        <ExamScoresDialogButton clientId={u.id} clientName={u.full_name} userId={profile?.id || ""} />
+                      )}
+                    </div>
+                  </td>
                   <td className="p-4 text-muted-foreground">{u.email}</td>
                   <td className="p-4 text-muted-foreground">{u.phone || "—"}</td>
                   {role === "client" && <td className="p-4"><span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">{u.license_type || "—"}</span></td>}
                   {role === "client" && <td className="p-4 text-muted-foreground">{teachers.find(t => t.id === u.teacher_id)?.full_name || "—"}</td>}
                   <td className="p-4">
                     <div className="flex gap-1">
-                      {role === "client" && (
-                        <ExamScoresDialogButton clientId={u.id} clientName={u.full_name} userId={profile?.id || ""} />
-                      )}
                       <Button variant="ghost" size="icon" onClick={() => {
                         setEditUser(u);
                         setForm({ full_name: u.full_name, phone: u.phone || "", license_type: u.license_type || "", teacher_id: u.teacher_id || "" });
