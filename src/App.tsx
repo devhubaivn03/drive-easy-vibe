@@ -22,6 +22,7 @@ import ClientDashboard, { ClientNotifications, ClientSettings } from "./pages/Cl
 import ClientPractice from "./pages/ClientPractice";
 import ClientExam from "./pages/ClientExam";
 import SuperadminQuestions from "./pages/SuperadminQuestions";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/403" element={<Forbidden />} />
+
+            {/* Shared profile page for all authenticated roles */}
+            <Route path="/profile" element={<ProtectedRoute allowedRoles={["superadmin","admin","teacher","staff","client"]}><Profile /></ProtectedRoute>} />
 
             {/* Superadmin */}
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminDashboard /></ProtectedRoute>} />
