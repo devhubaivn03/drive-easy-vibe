@@ -98,6 +98,10 @@ export default function ClientDashboard() {
         </div>
       </div>
 
+      <div className="mb-6">
+        <ExamScoresDisplay data={examData} />
+      </div>
+
       <h2 className="mb-4 text-lg font-bold text-foreground flex items-center gap-2">
         <BookOpen size={20} /> Tiến trình học
       </h2>
@@ -109,10 +113,6 @@ export default function ClientDashboard() {
             <ScoreCircle label="Mô Phỏng" score={progress.simulation_score} />
             <ScoreCircle label="Sa Hình" score={progress.track_test_score} />
             <ScoreCircle label="Đường Trường" score={progress.road_test_score} />
-          </div>
-
-          <div className="mb-6">
-            <ExamScoresDisplay data={examData} />
           </div>
 
           {progress.schedule_milestones && progress.schedule_milestones.length > 0 && (
