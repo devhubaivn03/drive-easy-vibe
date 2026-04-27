@@ -73,7 +73,7 @@ export function ExamScoresDisplay({ data }: { data: ExamResultData | null }) {
         <Award size={18} /> Điểm thi
       </h3>
       <div className="relative overflow-x-auto pb-2">
-        <div className="flex items-start gap-2 min-w-max">
+        <div className="flex items-start gap-3 min-w-max">
           {EXAM_MILESTONES.map((m, i) => {
             const status = getStatus(m, d);
             const color =
@@ -82,20 +82,20 @@ export function ExamScoresDisplay({ data }: { data: ExamResultData | null }) {
               : "border-border bg-muted/30 text-muted-foreground";
             return (
               <div key={m.key} className="flex items-center">
-                <div className="flex flex-col items-center w-28">
+                <div className="flex flex-col items-center w-32">
                   <div
-                    className={cn("h-14 w-14 border-2 flex items-center justify-center transition-all", color)}
+                    className={cn("h-20 w-20 border-2 flex items-center justify-center transition-all", color)}
                     style={{ clipPath: "polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)" }}
                   >
-                    {status === "pass" ? <CheckCircle2 size={24} /> : status === "fail" ? <XCircle size={24} /> : <Award size={22} />}
+                    {status === "pass" ? <CheckCircle2 size={32} /> : status === "fail" ? <XCircle size={32} /> : <Award size={28} />}
                   </div>
-                  <p className="mt-2 text-xs font-medium text-foreground text-center">{m.label}</p>
-                  <p className={cn("text-xs font-bold mt-0.5", status === "pass" ? "text-green-600 dark:text-green-400" : status === "fail" ? "text-destructive" : "text-muted-foreground")}>
+                  <p className="mt-2 text-sm font-medium text-foreground text-center">{m.label}</p>
+                  <p className={cn("text-sm font-bold mt-0.5", status === "pass" ? "text-green-600 dark:text-green-400" : status === "fail" ? "text-destructive" : "text-muted-foreground")}>
                     {displayValue(m, d)}
                   </p>
                 </div>
                 {i < EXAM_MILESTONES.length - 1 && (
-                  <div className={cn("h-0.5 w-8 mt-7 transition-colors", status === "pass" ? "bg-green-500" : status === "fail" ? "bg-destructive/60" : "bg-border")} />
+                  <div className={cn("h-0.5 w-10 mt-10 transition-colors", status === "pass" ? "bg-green-500" : status === "fail" ? "bg-destructive/60" : "bg-border")} />
                 )}
               </div>
             );
