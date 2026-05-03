@@ -14,48 +14,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
 import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
+import { useStaffNav } from "@/hooks/useRoleNav";
+import { ClientChatPanel } from "@/components/shared/ClientChatPanel";
 
-function useStaffNavBadges() {
-  const [newLeads, setNewLeads] = useState(0);
-  const [waitingChats, setWaitingChats] = useState(0);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const [l, c] = await Promise.all([
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
-      ]);
-      setNewLeads(l.count || 0);
-      setWaitingChats(c.count || 0);
-    };
-    fetch();
-
-    const ch1 = supabase.channel("staff-badge-leads")
-      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
-      }).subscribe();
-
-    const ch2 = supabase.channel("staff-badge-chats")
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
-      }).subscribe();
-
-    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
-  }, []);
-
-  return { newLeads, waitingChats };
-}
-
-function useStaffNavItems(): NavItem[] {
-  const { newLeads, waitingChats } = useStaffNavBadges();
-  return [
-    { label: "Tổng quan", path: "/staff", icon: <LayoutDashboard size={18} /> },
-    { label: "Quản lý Học viên", path: "/staff/clients", icon: <Users size={18} /> },
-    { label: "Lead liên hệ", path: "/staff/leads", icon: <ClipboardList size={18} />, badge: newLeads },
-    { label: "Chat trực tuyến", path: "/staff/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
-    { label: "Cài đặt", path: "/staff/settings", icon: <Settings size={18} /> },
-  ];
-}
+const useStaffNavItems = useStaffNav;
 
 export default function StaffDashboard() {
   const navItems = useStaffNavItems();
@@ -571,6 +533,16 @@ export function StaffSettings() {
     <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
       <ChangeOwnPassword />
+    </DashboardLayout>
+  );
+}
+
+export function StaffStudentChat() {
+  const navItems = useStaffNavItems();
+  return (
+    <DashboardLayout navItems={navItems} roleLabel="STAFF" roleColor="bg-yellow-500 text-foreground">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Chat với học viên</h1>
+      <ClientChatPanel scope="staff" />
     </DashboardLayout>
   );
 }
