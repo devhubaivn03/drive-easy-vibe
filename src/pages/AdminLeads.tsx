@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useAdminNavItems } from "@/pages/AdminDashboard";
+import { useAdminNav } from "@/hooks/useRoleNav";
 
 export default function AdminLeads() {
-  const navItems = useAdminNavItems();
+  const navItems = useAdminNav();
   const { profile } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
