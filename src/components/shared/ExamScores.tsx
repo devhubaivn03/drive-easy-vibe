@@ -72,8 +72,8 @@ export function ExamScoresDisplay({ data }: { data: ExamResultData | null }) {
       <h3 className="mb-5 font-semibold text-foreground flex items-center gap-2">
         <Award size={18} /> Điểm thi
       </h3>
-      <div className="relative overflow-x-auto pb-2">
-        <div className="flex items-start gap-3 min-w-max">
+      <div className="relative overflow-x-auto pb-2 -mx-2 px-2">
+        <div className="flex items-start gap-2 sm:gap-3 min-w-max">
           {EXAM_MILESTONES.map((m, i) => {
             const status = getStatus(m, d);
             const color =
@@ -82,20 +82,20 @@ export function ExamScoresDisplay({ data }: { data: ExamResultData | null }) {
               : "border-border bg-muted/30 text-muted-foreground";
             return (
               <div key={m.key} className="flex items-center">
-                <div className="flex flex-col items-center w-32">
+                <div className="flex flex-col items-center w-24 sm:w-28 md:w-32">
                   <div
-                    className={cn("h-20 w-20 border-2 flex items-center justify-center transition-all", color)}
+                    className={cn("h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 border-2 flex items-center justify-center transition-all", color)}
                     style={{ clipPath: "polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)" }}
                   >
-                    {status === "pass" ? <CheckCircle2 size={32} /> : status === "fail" ? <XCircle size={32} /> : <Award size={28} />}
+                    {status === "pass" ? <CheckCircle2 className="h-6 w-6 md:h-8 md:w-8" /> : status === "fail" ? <XCircle className="h-6 w-6 md:h-8 md:w-8" /> : <Award className="h-5 w-5 md:h-7 md:w-7" />}
                   </div>
-                  <p className="mt-2 text-sm font-medium text-foreground text-center">{m.label}</p>
-                  <p className={cn("text-sm font-bold mt-0.5", status === "pass" ? "text-green-600 dark:text-green-400" : status === "fail" ? "text-destructive" : "text-muted-foreground")}>
+                  <p className="mt-2 text-xs sm:text-sm font-medium text-foreground text-center">{m.label}</p>
+                  <p className={cn("text-xs sm:text-sm font-bold mt-0.5", status === "pass" ? "text-green-600 dark:text-green-400" : status === "fail" ? "text-destructive" : "text-muted-foreground")}>
                     {displayValue(m, d)}
                   </p>
                 </div>
                 {i < EXAM_MILESTONES.length - 1 && (
-                  <div className={cn("h-0.5 w-10 mt-10 transition-colors", status === "pass" ? "bg-green-500" : status === "fail" ? "bg-destructive/60" : "bg-border")} />
+                  <div className={cn("h-0.5 w-6 sm:w-8 md:w-10 mt-7 sm:mt-8 md:mt-10 transition-colors", status === "pass" ? "bg-green-500" : status === "fail" ? "bg-destructive/60" : "bg-border")} />
                 )}
               </div>
             );
@@ -276,9 +276,9 @@ export function ExamScoresDialogButton({
         <Award size={16} />
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="glass-card max-h-[85vh] overflow-y-auto max-w-3xl">
+        <DialogContent className="glass-card w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Award size={18} /> Điểm thi — {clientName}
             </DialogTitle>
           </DialogHeader>
