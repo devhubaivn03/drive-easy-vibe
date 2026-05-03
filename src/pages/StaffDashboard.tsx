@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
+import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
 
 function useStaffNavBadges() {
   const [newLeads, setNewLeads] = useState(0);
@@ -237,6 +238,7 @@ export function StaffClients() {
                 <td className="p-4">
                   <div className="flex gap-1">
                     <ExamScoresDialogButton clientId={c.id} clientName={c.full_name} userId={profile?.id || ""} />
+                    <ViewAsStudentDialogButton clientId={c.id} clientName={c.full_name} />
                     <Button variant="ghost" size="icon" onClick={() => {
                       setEditUser(c);
                       setForm({ full_name: c.full_name, phone: c.phone || "", license_type: c.license_type || "", teacher_id: c.teacher_id || "" });
