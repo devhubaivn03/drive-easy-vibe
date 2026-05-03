@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
+import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
 
 function useAdminNavBadges() {
   const [newLeads, setNewLeads] = useState(0);
@@ -270,7 +271,10 @@ function UserManagementPage({
                   <td className="p-4">
                     <div className="flex gap-1">
                       {role === "client" && (
-                        <ExamScoresDialogButton clientId={u.id} clientName={u.full_name} userId={profile?.id || ""} />
+                        <>
+                          <ExamScoresDialogButton clientId={u.id} clientName={u.full_name} userId={profile?.id || ""} />
+                          <ViewAsStudentDialogButton clientId={u.id} clientName={u.full_name} />
+                        </>
                       )}
                       <Button variant="ghost" size="icon" onClick={() => {
                         setEditUser(u);
