@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ExamScoresEditor } from "@/components/shared/ExamScores";
+import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
 
 const navItems = [
   { label: "Học viên của tôi", path: "/teacher", icon: <LayoutDashboard size={18} /> },
@@ -53,10 +54,9 @@ export default function TeacherDashboard() {
               {clients.map((c) => (
                 <div
                   key={c.id}
-                  onClick={() => setSelected(c)}
-                  className="glass-card cursor-pointer rounded-2xl p-5 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                  className="glass-card rounded-2xl p-5 hover:shadow-xl transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-3 mb-3 cursor-pointer" onClick={() => setSelected(c)}>
                     <div className="h-10 w-10 rounded-full gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground">
                       {c.full_name?.charAt(0)}
                     </div>
@@ -65,11 +65,14 @@ export default function TeacherDashboard() {
                       <p className="text-xs text-muted-foreground">{c.email}</p>
                     </div>
                   </div>
-                  {c.license_type && (
-                    <span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-                      Hạng {c.license_type}
-                    </span>
-                  )}
+                  <div className="flex items-center justify-between">
+                    {c.license_type ? (
+                      <span className="gradient-primary rounded-full px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                        Hạng {c.license_type}
+                      </span>
+                    ) : <span />}
+                    <ViewAsStudentDialogButton clientId={c.id} clientName={c.full_name} />
+                  </div>
                 </div>
               ))}
             </div>
