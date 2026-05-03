@@ -91,6 +91,68 @@ export type Database = {
           },
         ]
       }
+      client_chat_messages: {
+        Row: {
+          chat_id: string
+          content: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          chat_id: string
+          content: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sender_role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          chat_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sender_role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "client_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_chats: {
+        Row: {
+          claimed_by: string | null
+          client_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          status: string
+        }
+        Insert: {
+          claimed_by?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          status?: string
+        }
+        Update: {
+          claimed_by?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       contact_leads: {
         Row: {
           assigned_to: string | null
@@ -492,6 +554,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_client_chat: { Args: { _client_id: string }; Returns: boolean }
       get_user_admin_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
