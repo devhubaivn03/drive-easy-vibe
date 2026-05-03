@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard, TableSkeleton, EmptyState } from "@/components/shared/StatCard";
 import { ChangeOwnPassword } from "@/components/shared/ChangeOwnPassword";
 import { supabase } from "@/lib/supabase";
@@ -13,50 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
 import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
+import { useAdminNav } from "@/hooks/useRoleNav";
+import { ClientChatPanel } from "@/components/shared/ClientChatPanel";
 
-function useAdminNavBadges() {
-  const [newLeads, setNewLeads] = useState(0);
-  const [waitingChats, setWaitingChats] = useState(0);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const [l, c] = await Promise.all([
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
-      ]);
-      setNewLeads(l.count || 0);
-      setWaitingChats(c.count || 0);
-    };
-    fetch();
-
-    const ch1 = supabase.channel("admin-badge-leads")
-      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
-      }).subscribe();
-
-    const ch2 = supabase.channel("admin-badge-chats")
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
-      }).subscribe();
-
-    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
-  }, []);
-
-  return { newLeads, waitingChats };
-}
-
-function useAdminNavItems(): NavItem[] {
-  const { newLeads, waitingChats } = useAdminNavBadges();
-  return [
-    { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
-    { label: "Quản lý Staff", path: "/admin/staff", icon: <Users size={18} /> },
-    { label: "Quản lý Giáo viên", path: "/admin/teachers", icon: <GraduationCap size={18} /> },
-    { label: "Quản lý Học viên", path: "/admin/clients", icon: <Users size={18} /> },
-    { label: "Lead liên hệ", path: "/admin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
-    { label: "Hộp thư Chat", path: "/admin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
-    { label: "Cài đặt", path: "/admin/settings", icon: <Settings size={18} /> },
-  ];
-}
+const useAdminNavItems = useAdminNav;
 
 function UserManagementPage({
   title,
@@ -386,6 +346,16 @@ export function AdminSettings() {
     <DashboardLayout navItems={navItems} roleLabel="ADMIN" roleColor="bg-orange-500 text-primary-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
       <ChangeOwnPassword />
+    </DashboardLayout>
+  );
+}
+
+export function AdminStudentChat() {
+  const navItems = useAdminNavItems();
+  return (
+    <DashboardLayout navItems={navItems} roleLabel="ADMIN" roleColor="bg-orange-500 text-primary-foreground">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Chat với học viên</h1>
+      <ClientChatPanel scope="admin" />
     </DashboardLayout>
   );
 }
