@@ -3,24 +3,17 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { TableSkeleton, EmptyState } from "@/components/shared/StatCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ClipboardList, Users, GraduationCap, LayoutDashboard, MessageCircle, UserCheck } from "lucide-react";
+import { ClipboardList, UserCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-
-const navItems = [
-  { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
-  { label: "Quản lý Staff", path: "/admin/staff", icon: <Users size={18} /> },
-  { label: "Quản lý Giáo viên", path: "/admin/teachers", icon: <GraduationCap size={18} /> },
-  { label: "Quản lý Học viên", path: "/admin/clients", icon: <Users size={18} /> },
-  { label: "Lead liên hệ", path: "/admin/leads", icon: <ClipboardList size={18} /> },
-  { label: "Hộp thư Chat", path: "/admin/chat", icon: <MessageCircle size={18} /> },
-];
+import { useAdminNav } from "@/hooks/useRoleNav";
 
 export default function AdminLeads() {
+  const navItems = useAdminNav();
   const { profile } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

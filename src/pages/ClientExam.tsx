@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, Bell, Settings, BookOpen, FileText, Play, Clock, ChevronLeft, ChevronRight, RotateCcw, ListChecks } from "lucide-react";
+import { LayoutDashboard, Bell, Settings, BookOpen, FileText, MessagesSquare, Play, Clock, ChevronLeft, ChevronRight, RotateCcw, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
@@ -14,6 +14,7 @@ const navItems = [
   { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
   { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
   { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
+  { label: "Chat với GV", path: "/client/chat", icon: <MessagesSquare size={18} /> },
   { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
   { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
 ];

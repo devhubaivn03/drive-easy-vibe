@@ -14,13 +14,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ExamScoresEditor } from "@/components/shared/ExamScores";
 import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
-
-const navItems = [
-  { label: "Học viên của tôi", path: "/teacher", icon: <LayoutDashboard size={18} /> },
-  { label: "Cài đặt", path: "/teacher/settings", icon: <Settings size={18} /> },
-];
+import { useTeacherNav } from "@/hooks/useRoleNav";
+import { ClientChatPanel } from "@/components/shared/ClientChatPanel";
 
 export default function TeacherDashboard() {
+  const navItems = useTeacherNav();
   const { profile } = useAuth();
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,10 +82,21 @@ export default function TeacherDashboard() {
 }
 
 export function TeacherSettings() {
+  const navItems = useTeacherNav();
   return (
     <DashboardLayout navItems={navItems} roleLabel="GIÁO VIÊN" roleColor="gradient-accent text-accent-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Cài đặt</h1>
       <ChangeOwnPassword />
+    </DashboardLayout>
+  );
+}
+
+export function TeacherStudentChat() {
+  const navItems = useTeacherNav();
+  return (
+    <DashboardLayout navItems={navItems} roleLabel="GIÁO VIÊN" roleColor="gradient-accent text-accent-foreground">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Chat với học viên</h1>
+      <ClientChatPanel scope="teacher" />
     </DashboardLayout>
   );
 }

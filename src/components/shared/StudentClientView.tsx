@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { ExamScoresDisplay, useExamResult } from "@/components/shared/ExamScores";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 /** Render the same content the student sees on their dashboard, for a given client */
 export function StudentClientView({ clientId }: { clientId: string }) {
@@ -167,9 +168,95 @@ export function ViewAsStudentDialogButton({ clientId, clientName }: { clientId: 
               <Eye size={18} /> Xem trang học viên — {clientName}
             </DialogTitle>
           </DialogHeader>
-          {open && <StudentClientView clientId={clientId} />}
+          {open && (
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="w-full justify-start overflow-x-auto">
+                <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+                <TabsTrigger value="practice">Ôn tập</TabsTrigger>
+                <TabsTrigger value="exam">Thi thử</TabsTrigger>
+              </TabsList>
+              <TabsContent value="overview" className="mt-4"><StudentClientView clientId={clientId} /></TabsContent>
+              <TabsContent value="practice" className="mt-4"><StudentPracticeView /></TabsContent>
+              <TabsContent value="exam" className="mt-4"><StudentExamView clientId={clientId} /></TabsContent>
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function StudentPracticeView() {
+  const [questions, setQuestions] = useState<any[]>([]);
+  useEffect(() => { supabase.from("questions").select("*").order("created_at").then(({ data }) => setQuestions(data || [])); }, []);
+  if (questions.length === 0) return <p className="text-sm text-muted-foreground">Chưa có câu hỏi.</p>;
+  return (
+    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+      <p className="text-xs text-muted-foreground">Tổng {questions.length} câu hỏi (đáp án hiển thị)</p>
+      {questions.map((q, i) => (
+        <div key={q.id} className="glass-card rounded-xl p-3">
+          <p className="text-sm font-medium text-foreground mb-2">{i + 1}. {q.question_text}</p>
+          {q.image_url && <img src={q.image_url} alt="" className="rounded mb-2 max-h-40" />}
+          <div className="space-y-1">
+            {[q.answer_1, q.answer_2, q.answer_3, q.answer_4].map((a, j) => a && (
+              <div key={j} className={cn("text-xs p-2 rounded",
+                q.correct_answer === j + 1 ? "bg-green-500/15 text-green-700 dark:text-green-300 font-medium" : "text-muted-foreground")}>
+                <b className="mr-1">{String.fromCharCode(65 + j)}.</b>{a}{q.correct_answer === j + 1 && " ✓"}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StudentExamView({ clientId }: { clientId: string }) {
+  const [sets, setSets] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<any[]>([]);
+  useEffect(() => {
+    supabase.from("exam_sets").select("*, exam_set_questions(count)").order("created_at").then(({ data }) => setSets(data || []));
+    supabase.from("exam_attempts").select("*").eq("client_id", clientId).order("submitted_at", { ascending: false })
+      .then(({ data }) => setAttempts(data || []));
+  }, [clientId]);
+
+  return (
+    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+      <div>
+        <h4 className="font-semibold text-foreground mb-2">Mã đề có sẵn</h4>
+        {sets.length === 0 ? <p className="text-xs text-muted-foreground">Chưa có mã đề.</p> : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {sets.map((s) => (
+              <div key={s.id} className="glass-card rounded-xl p-3">
+                <p className="font-semibold text-sm text-foreground">{s.name}</p>
+                <p className="text-xs text-muted-foreground">{s.exam_set_questions?.[0]?.count || 0} câu</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div>
+        <h4 className="font-semibold text-foreground mb-2">Lịch sử thi thử</h4>
+        {attempts.length === 0 ? <p className="text-xs text-muted-foreground">Học viên chưa thi thử lần nào.</p> : (
+          <div className="space-y-2">
+            {attempts.map((a) => {
+              const setName = sets.find((s) => s.id === a.exam_set_id)?.name || "—";
+              const pct = a.total_questions ? Math.round((a.score / a.total_questions) * 100) : 0;
+              return (
+                <div key={a.id} className="glass-card rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{setName}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(a.submitted_at).toLocaleString("vi-VN")} · {Math.floor(a.time_spent_seconds / 60)}p</p>
+                  </div>
+                  <span className={cn("text-sm font-bold", pct >= 70 ? "text-green-500" : "text-destructive")}>
+                    {a.score}/{a.total_questions}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
