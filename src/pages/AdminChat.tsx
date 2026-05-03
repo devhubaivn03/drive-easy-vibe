@@ -2,21 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, GraduationCap, ClipboardList, MessageCircle, LayoutDashboard, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
-  { label: "Quản lý Staff", path: "/admin/staff", icon: <Users size={18} /> },
-  { label: "Quản lý Giáo viên", path: "/admin/teachers", icon: <GraduationCap size={18} /> },
-  { label: "Quản lý Học viên", path: "/admin/clients", icon: <Users size={18} /> },
-  { label: "Lead liên hệ", path: "/admin/leads", icon: <ClipboardList size={18} /> },
-  { label: "Hộp thư Chat", path: "/admin/chat", icon: <MessageCircle size={18} /> },
-];
+import { useAdminNav } from "@/hooks/useRoleNav";
 
 export default function AdminChat() {
+  const navItems = useAdminNav();
   const { profile } = useAuth();
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSession, setActiveSession] = useState<any>(null);
