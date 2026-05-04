@@ -3,9 +3,41 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Paperclip, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+const MAX_SIZE = 25 * 1024 * 1024;
+
+function AttachmentView({ m }: { m: any }) {
+  if (!m.attachment_url) return null;
+  const t = m.attachment_type || "";
+  if (t.startsWith("image/")) {
+    return (
+      <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mt-1">
+        <img src={m.attachment_url} alt={m.attachment_name || "image"} className="max-h-48 rounded-lg object-cover" />
+      </a>
+    );
+  }
+  if (t.startsWith("video/")) {
+    return <video src={m.attachment_url} controls className="max-h-56 rounded-lg mt-1" />;
+  }
+  return (
+    <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-1 flex items-center gap-2 underline text-xs">
+      <FileText size={14} /> {m.attachment_name || "Tệp đính kèm"}
+    </a>
+  );
+}
+
+async function uploadAttachment(file: File, chatId: string, userId: string) {
+  if (file.size > MAX_SIZE) { toast.error("Tệp tối đa 25MB"); return null; }
+  const ext = file.name.split(".").pop() || "bin";
+  const path = `${chatId}/${userId}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await supabase.storage.from("chat-attachments").upload(path, file, { contentType: file.type, upsert: false });
+  if (error) { toast.error("Tải tệp lên thất bại"); return null; }
+  const { data } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+  return { url: data.publicUrl, type: file.type, name: file.name };
+}
 
 interface Props {
   scope: "teacher" | "staff" | "admin" | "superadmin";
@@ -21,6 +53,8 @@ export function ClientChatPanel({ scope }: Props) {
   const [senders, setSenders] = useState<Record<string, { full_name: string; role: string }>>({});
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const threadType: "teacher" | "staff" = scope === "teacher" ? "teacher" : "staff";
 
@@ -116,6 +150,11 @@ export function ClientChatPanel({ scope }: Props) {
       setChats((p) => ({ ...p, [s.id]: chat }));
     }
     setActiveChat(chat);
+    // mark as read by peer
+    const { data: upd } = await supabase.from("client_chats")
+      .update({ last_peer_read_at: new Date().toISOString() })
+      .eq("id", chat.id).select().single();
+    if (upd) setChats((p) => ({ ...p, [s.id]: upd }));
   };
 
   const claim = async () => {
@@ -125,13 +164,29 @@ export function ClientChatPanel({ scope }: Props) {
     if (data) { setActiveChat(data); setChats((p) => ({ ...p, [data.client_id]: data })); }
   };
 
-  const send = async () => {
-    if (!text.trim() || !activeChat || !profile) return;
+  const send = async (file?: File | null) => {
+    if (!activeChat || !profile) return;
+    if (!text.trim() && !file) return;
     const content = text.trim();
     setText("");
+    let att: any = null;
+    if (file) {
+      setUploading(true);
+      att = await uploadAttachment(file, activeChat.id, profile.id);
+      setUploading(false);
+      if (!att) return;
+    }
     await supabase.from("client_chat_messages").insert({
-      chat_id: activeChat.id, sender_id: profile.id, sender_role: profile.role as any, content,
+      chat_id: activeChat.id, sender_id: profile.id, sender_role: profile.role as any,
+      content: content || (att ? `[${att.name}]` : ""),
+      attachment_url: att?.url, attachment_type: att?.type, attachment_name: att?.name,
     });
+  };
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) send(f);
+    e.target.value = "";
   };
 
   return (
@@ -143,6 +198,7 @@ export function ClientChatPanel({ scope }: Props) {
         {students.length === 0 && <p className="p-4 text-sm text-muted-foreground text-center">Chưa có học viên</p>}
         {students.map((s) => {
           const c = chats[s.id];
+          const unread = !!(c?.last_client_message_at && (!c?.last_peer_read_at || new Date(c.last_client_message_at) > new Date(c.last_peer_read_at)));
           return (
             <button key={s.id} onClick={() => openStudent(s)}
               className={cn(
@@ -153,7 +209,12 @@ export function ClientChatPanel({ scope }: Props) {
                 {s.full_name?.charAt(0)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">{s.full_name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground truncate flex-1">{s.full_name}</p>
+                  {unread && activeStudent?.id !== s.id && (
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0" title="Tin nhắn mới" />
+                  )}
+                </div>
                 {c?.status === "waiting" && <span className="text-[10px] gradient-secondary text-primary-foreground rounded-full px-2 py-0.5">Chờ phản hồi</span>}
               </div>
             </button>
@@ -185,7 +246,9 @@ export function ClientChatPanel({ scope }: Props) {
                       {!mine && sender && (
                         <p className="text-[10px] font-semibold opacity-70 mb-0.5">{sender.full_name}</p>
                       )}
-                      {m.content}
+                      {m.content && !m.attachment_url && <span>{m.content}</span>}
+                      {m.content && m.attachment_url && !m.content.startsWith("[") && <span>{m.content}</span>}
+                      <AttachmentView m={m} />
                     </div>
                   </div>
                 );
@@ -193,10 +256,16 @@ export function ClientChatPanel({ scope }: Props) {
               <div ref={bottomRef} />
             </div>
             <div className="flex items-center gap-2 border-t border-border/50 p-3">
+              <input ref={fileRef} type="file" hidden onChange={onPickFile}
+                accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.zip" />
+              <Button size="icon" variant="ghost" className="rounded-xl" disabled={uploading}
+                onClick={() => fileRef.current?.click()} title="Đính kèm">
+                <Paperclip size={16} />
+              </Button>
               <Input value={text} onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && send()}
+                onKeyDown={(e) => e.key === "Enter" && send(null)}
                 placeholder="Nhập tin nhắn..." className="rounded-xl" />
-              <Button size="icon" variant="hero" className="rounded-xl" onClick={send}><Send size={16} /></Button>
+              <Button size="icon" variant="hero" className="rounded-xl" onClick={() => send(null)}><Send size={16} /></Button>
             </div>
           </>
         ) : (
@@ -218,6 +287,8 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
   const [senders, setSenders] = useState<Record<string, { full_name: string; role: string }>>({});
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const peerId = threadType === "teacher" ? (profile as any)?.teacher_id : (profile as any)?.admin_id;
 
@@ -230,6 +301,14 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
       else setChat(null);
     })();
   }, [profile, threadType, peerId]);
+
+  // Mark client-side read whenever chat opens
+  useEffect(() => {
+    if (!chat) return;
+    supabase.from("client_chats")
+      .update({ last_client_read_at: new Date().toISOString() })
+      .eq("id", chat.id).then(() => {});
+  }, [chat?.id]);
 
   const hydrateSenders = async (msgs: any[]) => {
     const ids = Array.from(new Set(msgs.map((m) => m.sender_id))).filter((id) => id && !senders[id]);
@@ -262,8 +341,9 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const send = async () => {
-    if (!text.trim() || !profile || !peerId) return;
+  const send = async (file?: File | null) => {
+    if (!profile || !peerId) return;
+    if (!text.trim() && !file) return;
     let c = chat;
     if (!c) {
       const { data, error } = await supabase.from("client_chats")
@@ -274,9 +354,24 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
     }
     const content = text.trim();
     setText("");
+    let att: any = null;
+    if (file) {
+      setUploading(true);
+      att = await uploadAttachment(file, c.id, profile.id);
+      setUploading(false);
+      if (!att) return;
+    }
     await supabase.from("client_chat_messages").insert({
-      chat_id: c.id, sender_id: profile.id, sender_role: "client" as any, content,
+      chat_id: c.id, sender_id: profile.id, sender_role: "client" as any,
+      content: content || (att ? `[${att.name}]` : ""),
+      attachment_url: att?.url, attachment_type: att?.type, attachment_name: att?.name,
     });
+  };
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) send(f);
+    e.target.value = "";
   };
 
   if (!peerId) {
@@ -290,10 +385,13 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
     );
   }
 
+  const peerUnread = !!(chat?.last_peer_message_at && (!chat?.last_client_read_at || new Date(chat.last_peer_message_at) > new Date(chat.last_client_read_at)));
+
   return (
     <div className="glass-card rounded-2xl flex flex-col h-[calc(100vh-220px)]">
       <div className="border-b border-border/50 p-3 font-semibold text-foreground flex items-center gap-2">
         <MessageCircle size={18} /> {threadType === "teacher" ? "Chat với giáo viên" : "Chat với nhân viên trung tâm"}
+        {peerUnread && <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" title="Tin nhắn mới" />}
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {messages.length === 0 && <p className="text-center text-xs text-muted-foreground mt-4">Hãy gửi tin nhắn đầu tiên 👋</p>}
@@ -309,7 +407,8 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
                     {sender.full_name}{sender.role && sender.role !== "client" ? ` · ${sender.role}` : ""}
                   </p>
                 )}
-                {m.content}
+                {m.content && (!m.attachment_url || !m.content.startsWith("[")) && <span>{m.content}</span>}
+                <AttachmentView m={m} />
               </div>
             </div>
           );
@@ -317,10 +416,16 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
         <div ref={bottomRef} />
       </div>
       <div className="flex items-center gap-2 border-t border-border/50 p-3">
+        <input ref={fileRef} type="file" hidden onChange={onPickFile}
+          accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.zip" />
+        <Button size="icon" variant="ghost" className="rounded-xl" disabled={uploading}
+          onClick={() => fileRef.current?.click()} title="Đính kèm">
+          <Paperclip size={16} />
+        </Button>
         <Input value={text} onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
+          onKeyDown={(e) => e.key === "Enter" && send(null)}
           placeholder="Nhập tin nhắn..." className="rounded-xl" />
-        <Button size="icon" variant="hero" className="rounded-xl" onClick={send}><Send size={16} /></Button>
+        <Button size="icon" variant="hero" className="rounded-xl" onClick={() => send(null)}><Send size={16} /></Button>
       </div>
     </div>
   );
