@@ -3,9 +3,41 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Paperclip, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+const MAX_SIZE = 25 * 1024 * 1024;
+
+function AttachmentView({ m }: { m: any }) {
+  if (!m.attachment_url) return null;
+  const t = m.attachment_type || "";
+  if (t.startsWith("image/")) {
+    return (
+      <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mt-1">
+        <img src={m.attachment_url} alt={m.attachment_name || "image"} className="max-h-48 rounded-lg object-cover" />
+      </a>
+    );
+  }
+  if (t.startsWith("video/")) {
+    return <video src={m.attachment_url} controls className="max-h-56 rounded-lg mt-1" />;
+  }
+  return (
+    <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-1 flex items-center gap-2 underline text-xs">
+      <FileText size={14} /> {m.attachment_name || "Tệp đính kèm"}
+    </a>
+  );
+}
+
+async function uploadAttachment(file: File, chatId: string, userId: string) {
+  if (file.size > MAX_SIZE) { toast.error("Tệp tối đa 25MB"); return null; }
+  const ext = file.name.split(".").pop() || "bin";
+  const path = `${chatId}/${userId}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await supabase.storage.from("chat-attachments").upload(path, file, { contentType: file.type, upsert: false });
+  if (error) { toast.error("Tải tệp lên thất bại"); return null; }
+  const { data } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+  return { url: data.publicUrl, type: file.type, name: file.name };
+}
 
 interface Props {
   scope: "teacher" | "staff" | "admin" | "superadmin";
