@@ -210,30 +210,52 @@ export function ClientChatPanel({ scope }: Props) {
   );
 }
 
-/** Client side: their own chat thread */
-export function MyClientChat() {
+/** Client side: their own chat thread (with teacher OR with staff team) */
+export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }) {
   const { profile } = useAuth();
   const [chat, setChat] = useState<any | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [senders, setSenders] = useState<Record<string, { full_name: string; role: string }>>({});
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const peerId = threadType === "teacher" ? (profile as any)?.teacher_id : (profile as any)?.admin_id;
+
   useEffect(() => {
-    if (!profile) return;
+    if (!profile || !peerId) return;
     (async () => {
-      const { data } = await supabase.from("client_chats").select("*").eq("client_id", profile.id).maybeSingle();
+      const { data } = await supabase.from("client_chats").select("*")
+        .eq("client_id", profile.id).eq("thread_type", threadType).eq("peer_id", peerId).maybeSingle();
       if (data) setChat(data);
+      else setChat(null);
     })();
-  }, [profile]);
+  }, [profile, threadType, peerId]);
+
+  const hydrateSenders = async (msgs: any[]) => {
+    const ids = Array.from(new Set(msgs.map((m) => m.sender_id))).filter((id) => id && !senders[id]);
+    if (ids.length === 0) return;
+    const { data } = await supabase.from("profiles").select("id, full_name, role").in("id", ids);
+    if (data) {
+      setSenders((prev) => {
+        const next = { ...prev };
+        data.forEach((p: any) => { next[p.id] = { full_name: p.full_name, role: p.role }; });
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     if (!chat) return;
     supabase.from("client_chat_messages").select("*").eq("chat_id", chat.id).order("created_at")
-      .then(({ data }) => setMessages(data || []));
+      .then(async ({ data }) => { setMessages(data || []); await hydrateSenders(data || []); });
     const ch = supabase.channel(`my-ccm-${chat.id}`)
       .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "client_chat_messages", filter: `chat_id=eq.${chat.id}` },
-        (p) => setMessages((prev) => prev.some((m) => m.id === (p.new as any).id) ? prev : [...prev, p.new]))
+        async (p) => {
+          const m: any = p.new;
+          setMessages((prev) => prev.some((x) => x.id === m.id) ? prev : [...prev, m]);
+          await hydrateSenders([m]);
+        })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [chat]);
@@ -241,11 +263,12 @@ export function MyClientChat() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const send = async () => {
-    if (!text.trim() || !profile) return;
+    if (!text.trim() || !profile || !peerId) return;
     let c = chat;
     if (!c) {
       const { data, error } = await supabase.from("client_chats")
-        .insert({ client_id: profile.id, status: "waiting" }).select().single();
+        .insert({ client_id: profile.id, status: "waiting", thread_type: threadType, peer_id: peerId })
+        .select().single();
       if (error) { toast.error("Không tạo được phiên chat"); return; }
       c = data; setChat(c);
     }
@@ -256,19 +279,36 @@ export function MyClientChat() {
     });
   };
 
+  if (!peerId) {
+    return (
+      <div className="glass-card rounded-2xl p-8 text-center">
+        <MessageCircle size={40} className="mx-auto mb-2 opacity-40" />
+        <p className="text-sm text-muted-foreground">
+          {threadType === "teacher" ? "Bạn chưa được phân giáo viên." : "Chưa có nhân viên phụ trách."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-2xl flex flex-col h-[calc(100vh-220px)]">
       <div className="border-b border-border/50 p-3 font-semibold text-foreground flex items-center gap-2">
-        <MessageCircle size={18} /> Chat với trung tâm
+        <MessageCircle size={18} /> {threadType === "teacher" ? "Chat với giáo viên" : "Chat với nhân viên trung tâm"}
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {messages.length === 0 && <p className="text-center text-xs text-muted-foreground mt-4">Hãy gửi tin nhắn đầu tiên 👋</p>}
         {messages.map((m) => {
           const mine = m.sender_id === profile?.id;
+          const sender = senders[m.sender_id];
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
               <div className={cn("max-w-[75%] rounded-2xl px-3 py-2 text-sm",
                 mine ? "gradient-primary text-primary-foreground" : "bg-muted text-foreground")}>
+                {!mine && sender && (
+                  <p className="text-[10px] font-semibold opacity-70 mb-0.5">
+                    {sender.full_name}{sender.role && sender.role !== "client" ? ` · ${sender.role}` : ""}
+                  </p>
+                )}
                 {m.content}
               </div>
             </div>
