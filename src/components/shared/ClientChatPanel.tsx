@@ -287,6 +287,8 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
   const [senders, setSenders] = useState<Record<string, { full_name: string; role: string }>>({});
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const peerId = threadType === "teacher" ? (profile as any)?.teacher_id : (profile as any)?.admin_id;
 
@@ -299,6 +301,14 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
       else setChat(null);
     })();
   }, [profile, threadType, peerId]);
+
+  // Mark client-side read whenever chat opens
+  useEffect(() => {
+    if (!chat) return;
+    supabase.from("client_chats")
+      .update({ last_client_read_at: new Date().toISOString() })
+      .eq("id", chat.id).then(() => {});
+  }, [chat?.id]);
 
   const hydrateSenders = async (msgs: any[]) => {
     const ids = Array.from(new Set(msgs.map((m) => m.sender_id))).filter((id) => id && !senders[id]);
@@ -331,8 +341,9 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const send = async () => {
-    if (!text.trim() || !profile || !peerId) return;
+  const send = async (file?: File | null) => {
+    if (!profile || !peerId) return;
+    if (!text.trim() && !file) return;
     let c = chat;
     if (!c) {
       const { data, error } = await supabase.from("client_chats")
@@ -343,9 +354,24 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
     }
     const content = text.trim();
     setText("");
+    let att: any = null;
+    if (file) {
+      setUploading(true);
+      att = await uploadAttachment(file, c.id, profile.id);
+      setUploading(false);
+      if (!att) return;
+    }
     await supabase.from("client_chat_messages").insert({
-      chat_id: c.id, sender_id: profile.id, sender_role: "client" as any, content,
+      chat_id: c.id, sender_id: profile.id, sender_role: "client" as any,
+      content: content || (att ? `[${att.name}]` : ""),
+      attachment_url: att?.url, attachment_type: att?.type, attachment_name: att?.name,
     });
+  };
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) send(f);
+    e.target.value = "";
   };
 
   if (!peerId) {
@@ -359,10 +385,13 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
     );
   }
 
+  const peerUnread = !!(chat?.last_peer_message_at && (!chat?.last_client_read_at || new Date(chat.last_peer_message_at) > new Date(chat.last_client_read_at)));
+
   return (
     <div className="glass-card rounded-2xl flex flex-col h-[calc(100vh-220px)]">
       <div className="border-b border-border/50 p-3 font-semibold text-foreground flex items-center gap-2">
         <MessageCircle size={18} /> {threadType === "teacher" ? "Chat với giáo viên" : "Chat với nhân viên trung tâm"}
+        {peerUnread && <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" title="Tin nhắn mới" />}
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {messages.length === 0 && <p className="text-center text-xs text-muted-foreground mt-4">Hãy gửi tin nhắn đầu tiên 👋</p>}
@@ -378,7 +407,8 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
                     {sender.full_name}{sender.role && sender.role !== "client" ? ` · ${sender.role}` : ""}
                   </p>
                 )}
-                {m.content}
+                {m.content && (!m.attachment_url || !m.content.startsWith("[")) && <span>{m.content}</span>}
+                <AttachmentView m={m} />
               </div>
             </div>
           );
@@ -386,10 +416,16 @@ export function MyClientChat({ threadType }: { threadType: "teacher" | "staff" }
         <div ref={bottomRef} />
       </div>
       <div className="flex items-center gap-2 border-t border-border/50 p-3">
+        <input ref={fileRef} type="file" hidden onChange={onPickFile}
+          accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.zip" />
+        <Button size="icon" variant="ghost" className="rounded-xl" disabled={uploading}
+          onClick={() => fileRef.current?.click()} title="Đính kèm">
+          <Paperclip size={16} />
+        </Button>
         <Input value={text} onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
+          onKeyDown={(e) => e.key === "Enter" && send(null)}
           placeholder="Nhập tin nhắn..." className="rounded-xl" />
-        <Button size="icon" variant="hero" className="rounded-xl" onClick={send}><Send size={16} /></Button>
+        <Button size="icon" variant="hero" className="rounded-xl" onClick={() => send(null)}><Send size={16} /></Button>
       </div>
     </div>
   );
