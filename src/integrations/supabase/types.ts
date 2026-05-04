@@ -133,7 +133,9 @@ export type Database = {
           created_at: string
           id: string
           last_message_at: string
+          peer_id: string | null
           status: string
+          thread_type: string
         }
         Insert: {
           claimed_by?: string | null
@@ -141,7 +143,9 @@ export type Database = {
           created_at?: string
           id?: string
           last_message_at?: string
+          peer_id?: string | null
           status?: string
+          thread_type?: string
         }
         Update: {
           claimed_by?: string | null
@@ -149,7 +153,9 @@ export type Database = {
           created_at?: string
           id?: string
           last_message_at?: string
+          peer_id?: string | null
           status?: string
+          thread_type?: string
         }
         Relationships: []
       }
@@ -554,7 +560,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_access_client_chat: { Args: { _client_id: string }; Returns: boolean }
+      can_access_client_chat_row: {
+        Args: { _client_id: string; _peer_id: string; _thread_type: string }
+        Returns: boolean
+      }
       get_user_admin_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
