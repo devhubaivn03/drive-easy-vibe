@@ -18,7 +18,7 @@ import AdminLeads from "./pages/AdminLeads";
 import AdminChat from "./pages/AdminChat";
 import StaffDashboard, { StaffClients, StaffLeads, StaffChat, StaffSettings, StaffStudentChat } from "./pages/StaffDashboard";
 import TeacherDashboard, { TeacherSettings, TeacherStudentChat } from "./pages/TeacherDashboard";
-import ClientDashboard, { ClientNotifications, ClientSettings, ClientChat } from "./pages/ClientDashboard";
+import ClientDashboard, { ClientNotifications, ClientSettings, ClientChatTeacher, ClientChatStaff } from "./pages/ClientDashboard";
 import ClientPractice from "./pages/ClientPractice";
 import ClientExam from "./pages/ClientExam";
 import SuperadminQuestions from "./pages/SuperadminQuestions";
@@ -77,7 +77,8 @@ const App = () => (
             <Route path="/client" element={<ProtectedRoute allowedRoles={["client"]}><ClientDashboard /></ProtectedRoute>} />
             <Route path="/client/practice" element={<ProtectedRoute allowedRoles={["client"]}><ClientPractice /></ProtectedRoute>} />
             <Route path="/client/exam" element={<ProtectedRoute allowedRoles={["client"]}><ClientExam /></ProtectedRoute>} />
-            <Route path="/client/chat" element={<ProtectedRoute allowedRoles={["client"]}><ClientChat /></ProtectedRoute>} />
+            <Route path="/client/chat-teacher" element={<ProtectedRoute allowedRoles={["client"]}><ClientChatTeacher /></ProtectedRoute>} />
+            <Route path="/client/chat-staff" element={<ProtectedRoute allowedRoles={["client"]}><ClientChatStaff /></ProtectedRoute>} />
             <Route path="/client/notifications" element={<ProtectedRoute allowedRoles={["client"]}><ClientNotifications /></ProtectedRoute>} />
             <Route path="/client/settings" element={<ProtectedRoute allowedRoles={["client"]}><ClientSettings /></ProtectedRoute>} />
 
