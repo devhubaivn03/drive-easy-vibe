@@ -93,6 +93,9 @@ export type Database = {
       }
       client_chat_messages: {
         Row: {
+          attachment_name: string | null
+          attachment_type: string | null
+          attachment_url: string | null
           chat_id: string
           content: string
           created_at: string
@@ -101,6 +104,9 @@ export type Database = {
           sender_role: Database["public"]["Enums"]["app_role"]
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
           chat_id: string
           content: string
           created_at?: string
@@ -109,6 +115,9 @@ export type Database = {
           sender_role: Database["public"]["Enums"]["app_role"]
         }
         Update: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
           chat_id?: string
           content?: string
           created_at?: string
@@ -132,7 +141,11 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          last_client_message_at: string | null
+          last_client_read_at: string | null
           last_message_at: string
+          last_peer_message_at: string | null
+          last_peer_read_at: string | null
           peer_id: string | null
           status: string
           thread_type: string
@@ -142,7 +155,11 @@ export type Database = {
           client_id: string
           created_at?: string
           id?: string
+          last_client_message_at?: string | null
+          last_client_read_at?: string | null
           last_message_at?: string
+          last_peer_message_at?: string | null
+          last_peer_read_at?: string | null
           peer_id?: string | null
           status?: string
           thread_type?: string
@@ -152,7 +169,11 @@ export type Database = {
           client_id?: string
           created_at?: string
           id?: string
+          last_client_message_at?: string | null
+          last_client_read_at?: string | null
           last_message_at?: string
+          last_peer_message_at?: string | null
+          last_peer_read_at?: string | null
           peer_id?: string | null
           status?: string
           thread_type?: string
