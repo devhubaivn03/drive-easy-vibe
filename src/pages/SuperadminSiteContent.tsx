@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Globe, LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings } from "lucide-react";
+import { Save, Plus, Trash2, Globe, LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings, Info, Wrench, Image as ImageIcon, FileText, Phone } from "lucide-react";
 
 interface StatItem {
   icon: string;
@@ -25,6 +25,16 @@ interface CourseInfo {
   title: string;
   items: CourseItem[];
 }
+
+interface AboutHighlight { icon: string; title: string; desc: string; }
+interface AboutInfo { title: string; description: string; highlights: AboutHighlight[]; }
+interface ServiceItem { icon: string; title: string; desc: string; }
+interface ServicesInfo { title: string; items: ServiceItem[]; }
+interface GalleryImage { url: string; caption: string; }
+interface GalleryInfo { title: string; images: GalleryImage[]; }
+interface DocumentItem { title: string; desc: string; url: string; }
+interface DocumentsInfo { title: string; items: DocumentItem[]; }
+interface ContactInfo { title: string; address: string; phone: string; email: string; hours: string; }
 
 function useNavItems(): NavItem[] {
   const [newLeads, setNewLeads] = useState(0);
@@ -66,6 +76,11 @@ function SiteContentEditor() {
   const [stats, setStats] = useState<StatItem[]>([]);
   const [motorbikeInfo, setMotorbikeInfo] = useState<CourseInfo>({ title: "", items: [] });
   const [carInfo, setCarInfo] = useState<CourseInfo>({ title: "", items: [] });
+  const [aboutInfo, setAboutInfo] = useState<AboutInfo>({ title: "Về chúng tôi", description: "", highlights: [] });
+  const [servicesInfo, setServicesInfo] = useState<ServicesInfo>({ title: "Dịch vụ", items: [] });
+  const [galleryInfo, setGalleryInfo] = useState<GalleryInfo>({ title: "Hình ảnh", images: [] });
+  const [documentsInfo, setDocumentsInfo] = useState<DocumentsInfo>({ title: "Tài liệu", items: [] });
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({ title: "Liên hệ", address: "", phone: "", email: "", hours: "" });
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -80,6 +95,11 @@ function SiteContentEditor() {
         if (map.stats) setStats(map.stats);
         if (map.motorbike_info) setMotorbikeInfo(map.motorbike_info);
         if (map.car_info) setCarInfo(map.car_info);
+        if (map.about_info) setAboutInfo(map.about_info);
+        if (map.services_info) setServicesInfo(map.services_info);
+        if (map.gallery_info) setGalleryInfo(map.gallery_info);
+        if (map.documents_info) setDocumentsInfo(map.documents_info);
+        if (map.contact_info) setContactInfo(map.contact_info);
       }
       setLoading(false);
     };
@@ -96,6 +116,11 @@ function SiteContentEditor() {
       { key: "stats", value: stats },
       { key: "motorbike_info", value: motorbikeInfo },
       { key: "car_info", value: carInfo },
+      { key: "about_info", value: aboutInfo },
+      { key: "services_info", value: servicesInfo },
+      { key: "gallery_info", value: galleryInfo },
+      { key: "documents_info", value: documentsInfo },
+      { key: "contact_info", value: contactInfo },
     ];
 
     let hasError = false;
@@ -116,7 +141,7 @@ function SiteContentEditor() {
     setSaving(false);
   };
 
-  const iconOptions = ["Users", "GraduationCap", "Clock", "Award", "Bike", "Car", "Star", "Heart"];
+  const iconOptions = ["Users", "GraduationCap", "Clock", "Award", "Bike", "Car", "Star", "Heart", "Wrench", "FileText", "ImageIcon", "Info", "BookOpen", "Phone", "Mail", "MapPin", "Download"];
 
   if (loading) {
     return <div className="p-6 text-muted-foreground">Đang tải...</div>;
