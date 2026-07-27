@@ -15,6 +15,7 @@ import {
 
 const MAX_SIZE = 25 * 1024 * 1024;
 const INTERNAL_ROLES = ["superadmin", "admin", "teacher", "staff"] as const;
+type InternalRole = typeof INTERNAL_ROLES[number];
 
 const ROLE_LABEL: Record<string, string> = {
   superadmin: "Superadmin",
@@ -85,7 +86,7 @@ export function InternalChatPanel() {
       const { data } = await supabase
         .from("profiles")
         .select("id, full_name, email, role, avatar_url")
-        .in("role", INTERNAL_ROLES as unknown as string[])
+        .in("role", INTERNAL_ROLES as unknown as InternalRole[])
         .neq("id", profile.id)
         .is("deleted_at", null)
         .order("full_name");
