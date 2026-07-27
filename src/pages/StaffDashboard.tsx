@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
 import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
+import { SoftDeleteClientDialogButton } from "@/components/shared/SoftDeleteClientDialog";
 import { useStaffNav } from "@/hooks/useRoleNav";
 import { ClientChatPanel } from "@/components/shared/ClientChatPanel";
 
@@ -68,7 +69,7 @@ export function StaffClients() {
   const [saving, setSaving] = useState(false);
 
   const fetchClients = async () => {
-    const { data } = await supabase.from("profiles").select("*").eq("role", "client").order("created_at", { ascending: false });
+    const { data } = await supabase.from("profiles").select("*").eq("role", "client").is("deleted_at", null).order("created_at", { ascending: false });
     setClients(data || []);
     setLoading(false);
   };
@@ -205,6 +206,7 @@ export function StaffClients() {
                       setEditUser(c);
                       setForm({ full_name: c.full_name, phone: c.phone || "", license_type: c.license_type || "", teacher_id: c.teacher_id || "" });
                     }}><Pencil size={16} /></Button>
+                    <SoftDeleteClientDialogButton clientId={c.id} clientName={c.full_name} onDeleted={fetchClients} />
                   </div>
                 </td>
               </tr>

@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { ExamScoresDialogButton } from "@/components/shared/ExamScores";
 import { ViewAsStudentDialogButton } from "@/components/shared/StudentClientView";
+import { SoftDeleteClientDialogButton } from "@/components/shared/SoftDeleteClientDialog";
 import { useAdminNav } from "@/hooks/useRoleNav";
 import { ClientChatPanel } from "@/components/shared/ClientChatPanel";
 
@@ -41,7 +42,7 @@ function UserManagementPage({
   const [saving, setSaving] = useState(false);
 
   const fetchUsers = async () => {
-    let query = supabase.from("profiles").select("*").eq("role", role as any);
+    let query = supabase.from("profiles").select("*").eq("role", role as any).is("deleted_at", null);
     if (profile?.role === "admin") query = query.eq("admin_id", profile.id);
     const { data } = await query.order("created_at", { ascending: false });
     setUsers(data || []);
@@ -242,6 +243,9 @@ function UserManagementPage({
                       }}>
                         <Pencil size={16} />
                       </Button>
+                      {role === "client" && (
+                        <SoftDeleteClientDialogButton clientId={u.id} clientName={u.full_name} onDeleted={fetchUsers} />
+                      )}
                     </div>
                   </td>
                 </tr>

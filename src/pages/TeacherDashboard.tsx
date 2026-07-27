@@ -31,7 +31,8 @@ export default function TeacherDashboard() {
         .from("profiles")
         .select("*")
         .eq("role", "client")
-        .eq("teacher_id", profile.id);
+        .eq("teacher_id", profile.id)
+        .is("deleted_at", null);
       setClients(data || []);
       setLoading(false);
     };
