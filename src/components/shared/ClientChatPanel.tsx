@@ -62,7 +62,7 @@ export function ClientChatPanel({ scope }: Props) {
   useEffect(() => {
     if (!profile) return;
     const load = async () => {
-      let q = supabase.from("profiles").select("id, full_name, email, avatar_url").eq("role", "client");
+      let q = supabase.from("profiles").select("id, full_name, email, avatar_url").eq("role", "client").is("deleted_at", null);
       if (scope === "teacher") q = q.eq("teacher_id", profile.id);
       else if (scope === "admin") q = q.eq("admin_id", profile.id);
       else if (scope === "staff") q = q.eq("admin_id", (profile as any).admin_id);
