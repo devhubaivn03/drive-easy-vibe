@@ -366,6 +366,105 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_chat_messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_type: string | null
+          attachment_url: string | null
+          chat_id: string
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          recalled_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
+          chat_id: string
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          recalled_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_type?: string | null
+          attachment_url?: string | null
+          chat_id?: string
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          recalled_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "internal_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_chats: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          last_read_a: string | null
+          last_read_b: string | null
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_read_a?: string | null
+          last_read_b?: string | null
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_read_a?: string | null
+          last_read_b?: string | null
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internal_chats_user_a_fkey"
+            columns: ["user_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internal_chats_user_b_fkey"
+            columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -404,6 +503,9 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_reason: string | null
           email: string
           full_name: string
           id: string
@@ -418,6 +520,9 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           email: string
           full_name: string
           id: string
@@ -432,6 +537,9 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -452,6 +560,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_deleted_by_fkey"
+            columns: ["deleted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
