@@ -23,7 +23,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, navItems, roleLabel, roleColor }: DashboardLayoutProps) {
-  const { profile, signOut } = useAuth();
+  const { profile, branch, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -80,7 +80,14 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-16 items-center justify-between px-5 border-b border-sidebar-border">
-          <span className="text-lg font-extrabold text-sidebar-foreground">🚗 DriveMaster</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-lg font-extrabold text-sidebar-foreground">🚗 DriveMaster</span>
+            {branch?.name && (
+              <span className="ml-6 -mt-0.5 text-[11px] italic text-sidebar-foreground/70 -rotate-6 origin-left">
+                {branch.name}
+              </span>
+            )}
+          </div>
           <button className="text-sidebar-foreground md:hidden" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>
