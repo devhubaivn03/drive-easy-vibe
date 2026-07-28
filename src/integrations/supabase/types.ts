@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      branches: {
+        Row: {
+          address: string | null
+          code: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -58,6 +91,7 @@ export type Database = {
       }
       chat_sessions: {
         Row: {
+          branch_id: string | null
           claimed_by: string | null
           created_at: string
           id: string
@@ -66,6 +100,7 @@ export type Database = {
           visitor_token: string
         }
         Insert: {
+          branch_id?: string | null
           claimed_by?: string | null
           created_at?: string
           id?: string
@@ -74,6 +109,7 @@ export type Database = {
           visitor_token: string
         }
         Update: {
+          branch_id?: string | null
           claimed_by?: string | null
           created_at?: string
           id?: string
@@ -82,6 +118,13 @@ export type Database = {
           visitor_token?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_sessions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_sessions_claimed_by_fkey"
             columns: ["claimed_by"]
@@ -183,6 +226,7 @@ export type Database = {
       contact_leads: {
         Row: {
           assigned_to: string | null
+          branch_id: string | null
           content: string | null
           created_at: string
           id: string
@@ -192,6 +236,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          branch_id?: string | null
           content?: string | null
           created_at?: string
           id?: string
@@ -201,6 +246,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          branch_id?: string | null
           content?: string | null
           created_at?: string
           id?: string
@@ -214,6 +260,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_leads_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
         ]
@@ -422,6 +475,7 @@ export type Database = {
       }
       internal_chats: {
         Row: {
+          branch_id: string | null
           created_at: string
           id: string
           last_message_at: string
@@ -431,6 +485,7 @@ export type Database = {
           user_b: string
         }
         Insert: {
+          branch_id?: string | null
           created_at?: string
           id?: string
           last_message_at?: string
@@ -440,6 +495,7 @@ export type Database = {
           user_b: string
         }
         Update: {
+          branch_id?: string | null
           created_at?: string
           id?: string
           last_message_at?: string
@@ -449,6 +505,13 @@ export type Database = {
           user_b?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "internal_chats_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "internal_chats_user_a_fkey"
             columns: ["user_a"]
@@ -501,6 +564,7 @@ export type Database = {
         Row: {
           admin_id: string | null
           avatar_url: string | null
+          branch_id: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -518,6 +582,7 @@ export type Database = {
         Insert: {
           admin_id?: string | null
           avatar_url?: string | null
+          branch_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -535,6 +600,7 @@ export type Database = {
         Update: {
           admin_id?: string | null
           avatar_url?: string | null
+          branch_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -555,6 +621,13 @@ export type Database = {
             columns: ["admin_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
@@ -701,6 +774,7 @@ export type Database = {
         Returns: boolean
       }
       get_user_admin_id: { Args: { _user_id: string }; Returns: string }
+      get_user_branch_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

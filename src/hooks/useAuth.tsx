@@ -14,12 +14,20 @@ interface Profile {
   license_type: string | null;
   admin_id: string | null;
   teacher_id: string | null;
+  branch_id: string | null;
+}
+
+interface Branch {
+  id: string;
+  name: string;
+  code: string | null;
 }
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+  branch: Branch | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -30,6 +38,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [branch, setBranch] = useState<Branch | null>(null);
   const [loading, setLoading] = useState(true);
   const initializedRef = useRef(false);
 
@@ -40,6 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("id", userId)
       .single();
     setProfile(data);
+    if (data?.branch_id) {
+      const { data: b } = await supabase
+        .from("branches")
+        .select("id, name, code")
+        .eq("id", data.branch_id)
+        .single();
+      setBranch(b as Branch | null);
+    } else {
+      setBranch(null);
+    }
     return data;
   };
 
@@ -67,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
+          setBranch(null);
           if (initializedRef.current) {
             setLoading(false);
           }
@@ -85,10 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setBranch(null);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, profile, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, profile, branch, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

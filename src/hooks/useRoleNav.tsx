@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { NavItem } from "@/components/DashboardLayout";
-import { LayoutDashboard, Users, GraduationCap, ClipboardList, MessageCircle, Settings, MessagesSquare, Pencil, BookOpenCheck, Archive, Network } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, ClipboardList, MessageCircle, Settings, MessagesSquare, Pencil, BookOpenCheck, Archive, Network, Building2 } from "lucide-react";
 
 function useChatBadges() {
   const [newLeads, setNewLeads] = useState(0);
@@ -77,6 +77,7 @@ export function useSuperadminNav(): NavItem[] {
   return [
     { label: "Tổng quan", path: "/superadmin", icon: <LayoutDashboard size={18} /> },
     { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
+    { label: "Quản lý Chi nhánh", path: "/superadmin/branches", icon: <Building2 size={18} /> },
     { label: "Lịch sử học viên", path: "/superadmin/client-history", icon: <Archive size={18} /> },
     { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
     { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },

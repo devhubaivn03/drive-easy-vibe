@@ -37,7 +37,7 @@ serve(async (req) => {
 
     const { data: callerProfile } = await supabaseAdmin
       .from("profiles")
-      .select("role, id, admin_id")
+      .select("role, id, admin_id, branch_id")
       .eq("id", caller.id)
       .single();
 
@@ -98,7 +98,7 @@ serve(async (req) => {
     }
 
     // === CREATE USER (default action) ===
-    const { email, password, full_name, phone, role, admin_id, teacher_id, license_type } = body;
+    const { email, password, full_name, phone, role, admin_id, teacher_id, license_type, branch_id } = body;
 
     const allowedCreations: Record<string, string[]> = {
       superadmin: ["admin", "teacher", "staff", "client"],
@@ -133,6 +133,18 @@ serve(async (req) => {
       resolvedAdminId = callerProfile.admin_id;
     }
 
+    let resolvedBranchId: string | null = null;
+    if (callerProfile.role === "superadmin") {
+      resolvedBranchId = branch_id ?? null;
+      if (resolvedAdminId && !resolvedBranchId) {
+        const { data: adminProf } = await supabaseAdmin
+          .from("profiles").select("branch_id").eq("id", resolvedAdminId).single();
+        resolvedBranchId = (adminProf as any)?.branch_id ?? null;
+      }
+    } else {
+      resolvedBranchId = (callerProfile as any).branch_id ?? null;
+    }
+
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: newUser.user!.id,
       email,
@@ -142,6 +154,7 @@ serve(async (req) => {
       admin_id: resolvedAdminId || null,
       teacher_id: teacher_id || null,
       license_type: license_type || null,
+      branch_id: resolvedBranchId,
       created_by: caller.id,
     });
 

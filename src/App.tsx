@@ -13,6 +13,7 @@ import Forbidden from "./pages/Forbidden";
 
 import SuperadminDashboard, { SuperadminUsers, SuperadminLeads, SuperadminChat, SuperadminSettings } from "./pages/SuperadminDashboard";
 import SuperadminSiteContent from "./pages/SuperadminSiteContent";
+import SuperadminBranches from "./pages/SuperadminBranches";
 import AdminDashboard, { AdminStaff, AdminTeachers, AdminClients, AdminSettings, AdminStudentChat } from "./pages/AdminDashboard";
 import AdminLeads from "./pages/AdminLeads";
 import AdminChat from "./pages/AdminChat";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/superadmin/leads" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminLeads /></ProtectedRoute>} />
             <Route path="/superadmin/chat" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminChat /></ProtectedRoute>} />
             <Route path="/superadmin/site-content" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSiteContent /></ProtectedRoute>} />
+            <Route path="/superadmin/branches" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminBranches /></ProtectedRoute>} />
             <Route path="/superadmin/questions" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminQuestions /></ProtectedRoute>} />
             <Route path="/superadmin/client-history" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminClientHistory /></ProtectedRoute>} />
             <Route path="/superadmin/internal-chat" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminInternalChat /></ProtectedRoute>} />
