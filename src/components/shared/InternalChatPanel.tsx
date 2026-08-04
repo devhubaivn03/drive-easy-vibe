@@ -146,17 +146,6 @@ export function InternalChatPanel() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  // Đánh dấu đã đọc khi đang mở cuộc chat và có tin nhắn mới
-  useEffect(() => {
-    if (!activeChat || !profile || messages.length === 0) return;
-    const readField = activeChat.user_a === profile.id ? "last_read_a" : "last_read_b";
-    supabase.from("internal_chats")
-      .update({ [readField]: new Date().toISOString() } as any)
-      .eq("id", activeChat.id)
-      .then(() => {});
-    // eslint-disable-next-line
-  }, [messages.length, activeChat?.id, profile?.id]);
-
   const openPeer = async (peer: any) => {
     if (!profile) return;
     setActivePeer(peer);

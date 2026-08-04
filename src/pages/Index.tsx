@@ -11,26 +11,13 @@ import {
   Menu, X, Phone, Mail, MapPin, FileText, Image as ImageIcon, Wrench, Info, Home, BookOpen, Download
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { ImageSlideshow } from "@/components/landing/ImageSlideshow";
-import { cn } from "@/lib/utils";
-
-/** Chuẩn hóa 1 "ô hình" về mảng URL (hỗ trợ cả dữ liệu cũ chỉ có 1 url) */
-function toUrls(v: any): string[] {
-  if (!v) return [];
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (Array.isArray(v.urls)) return v.urls.filter(Boolean);
-  if (Array.isArray(v.images)) return v.images.filter(Boolean);
-  if (typeof v.url === "string" && v.url) return [v.url];
-  if (typeof v === "string") return [v];
-  return [];
-}
 
 const iconMap: Record<string, any> = {
   Users, GraduationCap, Clock, Award, Bike, Car, Star, Heart,
   Wrench, FileText, ImageIcon, Info, BookOpen, Phone, Mail, MapPin, Download,
 };
 
-const DEFAULT_NAV_LINKS = [
+const NAV_LINKS = [
   { id: "home", label: "Trang chủ", icon: Home },
   { id: "about", label: "Giới thiệu", icon: Info },
   { id: "courses", label: "Khóa học", icon: BookOpen },
@@ -122,19 +109,6 @@ export default function LandingPage() {
     hours: "T2 - CN: 7:00 - 21:00",
   };
 
-  // Menu điều hướng (Superadmin có thể đổi tên & ẩn/hiện)
-  const navLabels: Record<string, string> = content?.nav_labels || {};
-  const navHidden: Record<string, boolean> = content?.nav_hidden || {};
-  const NAV_LINKS = DEFAULT_NAV_LINKS
-    .filter((l) => !navHidden[l.id])
-    .map((l) => ({ ...l, label: navLabels[l.id] || l.label }));
-
-  // Các ô hình ảnh (mỗi ô có thể nhiều ảnh, tự đổi mỗi 2s)
-  const heroImages = toUrls(content?.hero_media);
-  const aboutImages = toUrls(content?.about_media);
-  const coursesImages = toUrls(content?.courses_media);
-  const servicesImages = toUrls(content?.services_media);
-
   const scrollTo = (id: string) => {
     setMobileNav(false);
     const el = document.getElementById(id);
@@ -194,75 +168,54 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section id="home" className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-16 overflow-hidden">
+      <section id="home" className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
         <div className="absolute -top-20 left-1/4 h-96 w-96 rounded-full gradient-primary opacity-20 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full gradient-secondary opacity-20 blur-3xl" />
         <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full gradient-accent opacity-15 blur-3xl" />
 
-        <div className="container relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 lg:grid-cols-2">
-          {/* Cột nội dung */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="text-center lg:text-left"
-            >
-              <h1 className="mb-4 text-4xl font-extrabold leading-tight md:text-5xl lg:text-6xl">
-                Học Lái Xe — <span className="gradient-text">{heroTitle1}</span> & <span className="gradient-text-accent">{heroTitle2}</span>
-              </h1>
-              <p className="mx-auto mb-8 max-w-xl text-lg text-muted-foreground lg:mx-0">{heroSubtitle}</p>
-            </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="relative z-10 text-center"
+        >
+          <h1 className="mb-4 text-4xl font-extrabold leading-tight md:text-6xl lg:text-7xl">
+            Học Lái Xe — <span className="gradient-text">{heroTitle1}</span> & <span className="gradient-text-accent">{heroTitle2}</span>
+          </h1>
+          <p className="mx-auto mb-12 max-w-2xl text-lg text-muted-foreground">{heroSubtitle}</p>
+        </motion.div>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
-                whileHover={{ scale: 1.03 }} onClick={() => setMotorbikeOpen(true)}
-                className="group flex-1 cursor-pointer glass-card rounded-3xl p-6 text-center transition-all duration-500 hover:shadow-2xl"
-              >
-                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary">
-                  <Bike className="h-8 w-8 text-primary-foreground" />
-                </div>
-                <h3 className="mb-1 text-lg font-bold text-foreground">🏍️ Xe Máy</h3>
-                <p className="text-sm text-muted-foreground">{motorbikeInfo.items.map((i: any) => i.type).join(", ")} — Nhanh chóng, tiện lợi</p>
-                <div className="mt-3 text-xs font-semibold text-primary">Nhấn để xem chi tiết →</div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
-                whileHover={{ scale: 1.03 }} onClick={() => setCarOpen(true)}
-                className="group flex-1 cursor-pointer glass-card rounded-3xl p-6 text-center transition-all duration-500 hover:shadow-2xl"
-              >
-                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl gradient-secondary">
-                  <Car className="h-8 w-8 text-secondary-foreground" />
-                </div>
-                <h3 className="mb-1 text-lg font-bold text-foreground">🚗 Ô Tô</h3>
-                <p className="text-sm text-muted-foreground">{carInfo.items.map((i: any) => i.type).join(", ")} — Chuyên nghiệp, bài bản</p>
-                <div className="mt-3 text-xs font-semibold text-secondary">Nhấn để xem chi tiết →</div>
-              </motion.div>
+        <div className="relative z-10 flex flex-col gap-8 md:flex-row">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
+            whileHover={{ scale: 1.05 }} onClick={() => setMotorbikeOpen(true)}
+            className="group cursor-pointer glass-card rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
+          >
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-primary">
+              <Bike className="h-10 w-10 text-primary-foreground" />
             </div>
-          </div>
+            <h3 className="mb-2 text-xl font-bold text-foreground">🏍️ Xe Máy</h3>
+            <p className="text-sm text-muted-foreground">{motorbikeInfo.items.map((i: any) => i.type).join(", ")} — Nhanh chóng, tiện lợi</p>
+            <div className="mt-4 text-xs font-semibold text-primary">Nhấn để xem chi tiết →</div>
+          </motion.div>
 
-          {/* Cột ảnh minh họa */}
-          {heroImages.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25, duration: 0.7 }}
-              className="relative"
-            >
-              <div className="absolute -inset-4 rounded-[2rem] gradient-primary opacity-20 blur-2xl" />
-              <ImageSlideshow
-                images={heroImages}
-                alt="Hình ảnh trung tâm đào tạo lái xe"
-                className="relative aspect-[4/3] w-full rounded-3xl glass-card p-0 shadow-2xl"
-                imgClassName="rounded-3xl"
-              />
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
+            whileHover={{ scale: 1.05 }} onClick={() => setCarOpen(true)}
+            className="group cursor-pointer glass-card rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
+          >
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-secondary">
+              <Car className="h-10 w-10 text-secondary-foreground" />
+            </div>
+            <h3 className="mb-2 text-xl font-bold text-foreground">🚗 Ô Tô</h3>
+            <p className="text-sm text-muted-foreground">{carInfo.items.map((i: any) => i.type).join(", ")} — Chuyên nghiệp, bài bản</p>
+            <div className="mt-4 text-xs font-semibold text-secondary">Nhấn để xem chi tiết →</div>
+          </motion.div>
         </div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.6 }}
-          className="container relative z-10 mx-auto mt-14 grid max-w-6xl grid-cols-2 gap-6 md:grid-cols-4"
+          className="relative z-10 mt-20 grid grid-cols-2 gap-6 md:grid-cols-4"
         >
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || Users;
@@ -282,31 +235,19 @@ export default function LandingPage() {
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-4 gradient-text">{aboutInfo.title}</h2>
           <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-12">{aboutInfo.description}</p>
-          <div className={cn("grid grid-cols-1 gap-8", aboutImages.length > 0 && "lg:grid-cols-2 items-center")}>
-            {aboutImages.length > 0 && (
-              <ImageSlideshow
-                images={aboutImages}
-                alt={aboutInfo.title}
-                className="aspect-[4/3] w-full rounded-3xl glass-card shadow-xl"
-                imgClassName="rounded-3xl"
-              />
-            )}
-            <div className={cn("grid grid-cols-1 gap-6", aboutImages.length > 0 ? "" : "md:grid-cols-3")}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {aboutInfo.highlights?.map((h: any, i: number) => {
               const Icon = iconMap[h.icon] || Star;
               return (
-                <div key={i} className={cn("glass-card rounded-2xl p-6", aboutImages.length > 0 ? "flex items-start gap-4" : "text-center")}>
-                  <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl gradient-primary", aboutImages.length > 0 ? "" : "mx-auto mb-4")}>
+                <div key={i} className="glass-card rounded-2xl p-6 text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary">
                     <Icon className="h-7 w-7 text-primary-foreground" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold mb-1">{h.title}</h3>
-                    <p className="text-sm text-muted-foreground">{h.desc}</p>
-                  </div>
+                  <h3 className="text-lg font-bold mb-2">{h.title}</h3>
+                  <p className="text-sm text-muted-foreground">{h.desc}</p>
                 </div>
               );
             })}
-            </div>
           </div>
         </div>
       </section>
@@ -315,14 +256,6 @@ export default function LandingPage() {
       <section id="courses" className="relative py-20 px-4 bg-muted/30 scroll-mt-16">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 gradient-text">Khóa học</h2>
-          {coursesImages.length > 0 && (
-            <ImageSlideshow
-              images={coursesImages}
-              alt="Khóa học lái xe"
-              className="mb-10 h-56 w-full rounded-3xl glass-card shadow-xl md:h-72"
-              imgClassName="rounded-3xl"
-            />
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -372,14 +305,6 @@ export default function LandingPage() {
       <section id="services" className="relative py-20 px-4 scroll-mt-16">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 gradient-text">{servicesInfo.title}</h2>
-          {servicesImages.length > 0 && (
-            <ImageSlideshow
-              images={servicesImages}
-              alt={servicesInfo.title}
-              className="mb-10 h-48 w-full rounded-3xl glass-card shadow-xl md:h-64"
-              imgClassName="rounded-3xl"
-            />
-          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {servicesInfo.items?.map((s: any, i: number) => {
               const Icon = iconMap[s.icon] || Wrench;
@@ -404,9 +329,9 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {galleryInfo.images?.map((g: any, i: number) => (
               <div key={i} className="group relative overflow-hidden rounded-2xl glass-card">
-                <ImageSlideshow images={toUrls(g)} alt={g.caption || "Hình ảnh"} className="h-64 w-full" />
+                <img src={g.url} alt={g.caption} loading="lazy" className="w-full h-64 object-cover transition group-hover:scale-105" />
                 {g.caption && (
-                  <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-foreground/70 to-transparent p-4 text-sm font-medium text-background">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white text-sm font-medium">
                     {g.caption}
                   </div>
                 )}
