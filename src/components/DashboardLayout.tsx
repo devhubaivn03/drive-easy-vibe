@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export interface NavItem {
   label: string;
@@ -33,6 +34,10 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
 
   useEffect(() => {
     if (!profile) return;
+    // Xin quyền hiển thị thông báo đẩy của trình duyệt
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
     const fetchNotifs = async () => {
       const { data } = await supabase
         .from("notifications")
@@ -48,8 +53,15 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
     const channel = supabase
       .channel("notif-bell")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${profile.id}` }, (payload) => {
-        setNotifications((prev) => [payload.new as any, ...prev].slice(0, 10));
+        const n = payload.new as any;
+        setNotifications((prev) => [n, ...prev].slice(0, 10));
         setUnreadCount((c) => c + 1);
+        toast.info(n.message);
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          try {
+            new Notification("DriveMaster", { body: n.message, icon: "/placeholder.svg" });
+          } catch { /* ignore */ }
+        }
       })
       .subscribe();
 
@@ -69,7 +81,7 @@ export function DashboardLayout({ children, navItems, roleLabel, roleColor }: Da
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background grid-bg">
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
