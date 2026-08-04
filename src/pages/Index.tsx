@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ImageSlideshow } from "@/components/landing/ImageSlideshow";
+import { cn } from "@/lib/utils";
 
 /** Chuẩn hóa 1 "ô hình" về mảng URL (hỗ trợ cả dữ liệu cũ chỉ có 1 url) */
 function toUrls(v: any): string[] {
