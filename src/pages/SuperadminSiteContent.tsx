@@ -35,6 +35,41 @@ interface GalleryInfo { title: string; images: GalleryImage[]; }
 interface DocumentItem { title: string; desc: string; url: string; }
 interface DocumentsInfo { title: string; items: DocumentItem[]; }
 interface ContactInfo { title: string; address: string; phone: string; email: string; hours: string; }
+interface HeroSlide { caption: string; images: string[]; }
+interface HeroGallery { title: string; slides: HeroSlide[]; }
+
+const NAV_IDS: { id: string; hint: string }[] = [
+  { id: "home", hint: "Trang chủ" },
+  { id: "about", hint: "Giới thiệu" },
+  { id: "courses", hint: "Khóa học" },
+  { id: "services", hint: "Dịch vụ" },
+  { id: "gallery", hint: "Hình ảnh" },
+  { id: "documents", hint: "Tài liệu" },
+  { id: "contact", hint: "Liên hệ" },
+];
+
+const SECTIONS = [
+  { id: "sc-general", label: "1. Thông tin chung" },
+  { id: "sc-nav", label: "2. Menu điều hướng" },
+  { id: "sc-hero-gallery", label: "3. Ảnh Trang chủ" },
+  { id: "sc-stats", label: "4. Thống kê" },
+  { id: "sc-motorbike", label: "5. Khóa Xe máy" },
+  { id: "sc-car", label: "6. Khóa Ô tô" },
+  { id: "sc-about", label: "7. Giới thiệu" },
+  { id: "sc-services", label: "8. Dịch vụ" },
+  { id: "sc-gallery", label: "9. Thư viện ảnh" },
+  { id: "sc-documents", label: "10. Tài liệu" },
+  { id: "sc-contact", label: "11. Liên hệ" },
+];
+
+async function uploadSiteImage(file: File): Promise<string | null> {
+  if (file.size > 10 * 1024 * 1024) { toast.error("Ảnh tối đa 10MB"); return null; }
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `site/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from("question-images").upload(path, file, { contentType: file.type, upsert: true });
+  if (error) { toast.error("Tải ảnh thất bại: " + error.message); return null; }
+  return supabase.storage.from("question-images").getPublicUrl(path).data.publicUrl;
+}
 
 function useNavItems(): NavItem[] {
   const [newLeads, setNewLeads] = useState(0);
@@ -81,6 +116,20 @@ function SiteContentEditor() {
   const [galleryInfo, setGalleryInfo] = useState<GalleryInfo>({ title: "Hình ảnh", images: [] });
   const [documentsInfo, setDocumentsInfo] = useState<DocumentsInfo>({ title: "Tài liệu", items: [] });
   const [contactInfo, setContactInfo] = useState<ContactInfo>({ title: "Liên hệ", address: "", phone: "", email: "", hours: "" });
+  const [navLabels, setNavLabels] = useState<Record<string, string>>({});
+  const [coursesTitle, setCoursesTitle] = useState("Khóa học");
+  const [footerNote, setFooterNote] = useState("All rights reserved.");
+  const [heroGallery, setHeroGallery] = useState<HeroGallery>({
+    title: "Hình ảnh trung tâm",
+    slides: [
+      { caption: "Sân tập rộng rãi", images: [] },
+      { caption: "Xe tập đời mới", images: [] },
+      { caption: "Học viên thực hành", images: [] },
+      { caption: "Phòng học lý thuyết", images: [] },
+      { caption: "Đội ngũ giáo viên", images: [] },
+    ],
+  });
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -100,6 +149,10 @@ function SiteContentEditor() {
         if (map.gallery_info) setGalleryInfo(map.gallery_info);
         if (map.documents_info) setDocumentsInfo(map.documents_info);
         if (map.contact_info) setContactInfo(map.contact_info);
+        if (map.nav_labels) setNavLabels(map.nav_labels);
+        if (map.courses_title) setCoursesTitle(map.courses_title);
+        if (map.footer_note) setFooterNote(map.footer_note);
+        if (map.hero_gallery) setHeroGallery(map.hero_gallery);
       }
       setLoading(false);
     };
@@ -121,6 +174,10 @@ function SiteContentEditor() {
       { key: "gallery_info", value: galleryInfo },
       { key: "documents_info", value: documentsInfo },
       { key: "contact_info", value: contactInfo },
+      { key: "nav_labels", value: navLabels },
+      { key: "courses_title", value: coursesTitle },
+      { key: "footer_note", value: footerNote },
+      { key: "hero_gallery", value: heroGallery },
     ];
 
     let hasError = false;
@@ -147,6 +204,27 @@ function SiteContentEditor() {
     return <div className="p-6 text-muted-foreground">Đang tải...</div>;
   }
 
+  const updateSlot = (i: number, patch: Partial<HeroSlide>) => {
+    const slides = [...heroGallery.slides];
+    slides[i] = { ...slides[i], ...patch };
+    setHeroGallery({ ...heroGallery, slides });
+  };
+
+  const onUploadSlot = async (i: number, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingSlot(i);
+    const urls: string[] = [];
+    for (const f of Array.from(files)) {
+      const url = await uploadSiteImage(f);
+      if (url) urls.push(url);
+    }
+    setUploadingSlot(null);
+    if (urls.length) {
+      updateSlot(i, { images: [...(heroGallery.slides[i].images || []), ...urls] });
+      toast.success(`Đã thêm ${urls.length} ảnh`);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -159,9 +237,29 @@ function SiteContentEditor() {
         </Button>
       </div>
 
+      {/* Quick nav */}
+      <div className="glass-card rounded-2xl p-4">
+        <p className="mb-2 text-xs font-semibold text-muted-foreground">Đi nhanh tới phần cần sửa</p>
+        <div className="flex flex-wrap gap-2">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className="rounded-full border border-border/60 px-3 py-1 text-xs font-medium hover:border-primary/60 hover:bg-primary/10 transition"
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Mọi thay đổi chỉ hiển thị trên trang chủ sau khi nhấn <strong>Lưu tất cả</strong>.
+        </p>
+      </div>
+
       {/* Brand & Hero */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">🏠 Thông tin chung</h2>
+      <section id="sc-general" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold text-foreground">1. 🏠 Thông tin chung</h2>
+        <p className="text-xs text-muted-foreground">Tên thương hiệu và dòng tiêu đề lớn nhất ở đầu trang chủ.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Tên thương hiệu</Label>
@@ -180,12 +278,113 @@ function SiteContentEditor() {
           <Label>Mô tả phụ</Label>
           <Textarea value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} className="rounded-xl" rows={3} />
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label>Tiêu đề mục Khóa học</Label>
+            <Input value={coursesTitle} onChange={(e) => setCoursesTitle(e.target.value)} className="rounded-xl" />
+          </div>
+          <div>
+            <Label>Dòng chân trang (footer)</Label>
+            <Input value={footerNote} onChange={(e) => setFooterNote(e.target.value)} className="rounded-xl" />
+          </div>
+        </div>
+      </section>
+
+      {/* Navbar labels */}
+      <section id="sc-nav" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold text-foreground">2. 🧭 Menu điều hướng</h2>
+        <p className="text-xs text-muted-foreground">
+          Đổi tên các mục trên thanh menu trang chủ. Để trống sẽ dùng lại tên mặc định.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {NAV_IDS.map((n) => (
+            <div key={n.id}>
+              <Label>{n.hint}</Label>
+              <Input
+                value={navLabels[n.id] ?? ""}
+                placeholder={n.hint}
+                onChange={(e) => setNavLabels({ ...navLabels, [n.id]: e.target.value })}
+                className="rounded-xl"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Hero gallery */}
+      <section id="sc-hero-gallery" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">3. 🖼️ Ảnh Trang chủ (khối ảnh lớn)</h2>
+          <Button size="sm" variant="outline" className="rounded-xl"
+            onClick={() => setHeroGallery({ ...heroGallery, slides: [...heroGallery.slides, { caption: "", images: [] }] })}>
+            <Plus size={14} /> Thêm ô ảnh
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Mỗi <strong>ô ảnh</strong> là một khung trên trang chủ. Nếu một ô có <strong>2 ảnh trở lên</strong>, các ảnh sẽ tự động
+          đổi sau mỗi <strong>2 giây</strong>. Chỉ 5 ô đầu tiên được hiển thị.
+        </p>
+        <div>
+          <Label>Tiêu đề khối ảnh</Label>
+          <Input value={heroGallery.title} onChange={(e) => setHeroGallery({ ...heroGallery, title: e.target.value })} className="rounded-xl" />
+        </div>
+        {heroGallery.slides.map((s, i) => (
+          <div key={i} className="rounded-xl border border-border/50 p-4 space-y-3">
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Label>Ô ảnh #{i + 1} — chú thích</Label>
+                <Input value={s.caption} onChange={(e) => updateSlot(i, { caption: e.target.value })} className="rounded-xl" />
+              </div>
+              <label className="cursor-pointer">
+                <span className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs font-medium hover:bg-primary/10">
+                  <ImageIcon size={14} /> {uploadingSlot === i ? "Đang tải..." : "Tải ảnh lên"}
+                </span>
+                <input type="file" accept="image/*" multiple hidden onChange={(e) => { onUploadSlot(i, e.target.files); e.currentTarget.value = ""; }} />
+              </label>
+              <Button size="icon" variant="ghost" className="text-destructive"
+                onClick={() => setHeroGallery({ ...heroGallery, slides: heroGallery.slides.filter((_, j) => j !== i) })}>
+                <Trash2 size={16} />
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {(s.images || []).map((url, k) => (
+                <div key={k} className="relative h-20 w-28 overflow-hidden rounded-lg border border-border/50">
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                  <button
+                    onClick={() => updateSlot(i, { images: s.images.filter((_, j) => j !== k) })}
+                    className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground"
+                    title="Xóa ảnh"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+              {(s.images || []).length === 0 && (
+                <p className="text-xs text-muted-foreground">Chưa có ảnh — tải lên hoặc dán link bên dưới.</p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-xs">Hoặc dán link ảnh (mỗi dòng 1 link)</Label>
+              <Textarea
+                rows={2}
+                value={(s.images || []).join("\n")}
+                onChange={(e) => updateSlot(i, { images: e.target.value.split("\n").map((x) => x.trim()).filter(Boolean) })}
+                className="rounded-xl font-mono text-xs"
+              />
+            </div>
+            {(s.images || []).length > 1 && (
+              <p className="text-xs text-primary">✓ {s.images.length} ảnh — sẽ tự động đổi mỗi 2 giây</p>
+            )}
+          </div>
+        ))}
       </section>
 
       {/* Stats */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
+      <section id="sc-stats" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">📊 Thống kê nổi bật</h2>
+          <h2 className="text-lg font-semibold text-foreground">4. 📊 Thống kê nổi bật</h2>
           <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setStats([...stats, { icon: "Users", value: "0", label: "Mới" }])}>
             <Plus size={14} /> Thêm
           </Button>
@@ -218,8 +417,8 @@ function SiteContentEditor() {
       </section>
 
       {/* Motorbike Courses */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">🏍️ Khóa học Xe máy</h2>
+      <section id="sc-motorbike" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold text-foreground">5. 🏍️ Khóa học Xe máy</h2>
         <div>
           <Label>Tiêu đề</Label>
           <Input value={motorbikeInfo.title} onChange={(e) => setMotorbikeInfo({ ...motorbikeInfo, title: e.target.value })} className="rounded-xl" />
@@ -244,8 +443,8 @@ function SiteContentEditor() {
       </section>
 
       {/* Car Courses */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">🚗 Khóa học Ô tô</h2>
+      <section id="sc-car" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold text-foreground">6. 🚗 Khóa học Ô tô</h2>
         <div>
           <Label>Tiêu đề</Label>
           <Input value={carInfo.title} onChange={(e) => setCarInfo({ ...carInfo, title: e.target.value })} className="rounded-xl" />
@@ -270,8 +469,8 @@ function SiteContentEditor() {
       </section>
 
       {/* About */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><Info size={18} /> Giới thiệu</h2>
+      <section id="sc-about" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Info size={18} /> 7. Giới thiệu</h2>
         <div><Label>Tiêu đề</Label><Input value={aboutInfo.title} onChange={(e) => setAboutInfo({ ...aboutInfo, title: e.target.value })} className="rounded-xl" /></div>
         <div><Label>Mô tả</Label><Textarea value={aboutInfo.description} onChange={(e) => setAboutInfo({ ...aboutInfo, description: e.target.value })} rows={3} className="rounded-xl" /></div>
         <div className="flex items-center justify-between">
@@ -298,8 +497,8 @@ function SiteContentEditor() {
       </section>
 
       {/* Services */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><Wrench size={18} /> Dịch vụ</h2>
+      <section id="sc-services" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Wrench size={18} /> 8. Dịch vụ</h2>
         <div><Label>Tiêu đề</Label><Input value={servicesInfo.title} onChange={(e) => setServicesInfo({ ...servicesInfo, title: e.target.value })} className="rounded-xl" /></div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Danh sách dịch vụ</span>
@@ -325,8 +524,8 @@ function SiteContentEditor() {
       </section>
 
       {/* Gallery */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><ImageIcon size={18} /> Hình ảnh</h2>
+      <section id="sc-gallery" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><ImageIcon size={18} /> 9. Thư viện ảnh (mục "Hình ảnh")</h2>
         <div><Label>Tiêu đề</Label><Input value={galleryInfo.title} onChange={(e) => setGalleryInfo({ ...galleryInfo, title: e.target.value })} className="rounded-xl" /></div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Hình ảnh (URL)</span>
@@ -348,8 +547,8 @@ function SiteContentEditor() {
       </section>
 
       {/* Documents */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><FileText size={18} /> Tài liệu</h2>
+      <section id="sc-documents" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><FileText size={18} /> 10. Tài liệu</h2>
         <div><Label>Tiêu đề</Label><Input value={documentsInfo.title} onChange={(e) => setDocumentsInfo({ ...documentsInfo, title: e.target.value })} className="rounded-xl" /></div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Danh sách tài liệu</span>
@@ -370,8 +569,8 @@ function SiteContentEditor() {
       </section>
 
       {/* Contact */}
-      <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><Phone size={18} /> Liên hệ</h2>
+      <section id="sc-contact" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Phone size={18} /> 11. Liên hệ</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><Label>Tiêu đề</Label><Input value={contactInfo.title} onChange={(e) => setContactInfo({ ...contactInfo, title: e.target.value })} className="rounded-xl" /></div>
           <div><Label>Địa chỉ</Label><Input value={contactInfo.address} onChange={(e) => setContactInfo({ ...contactInfo, address: e.target.value })} className="rounded-xl" /></div>

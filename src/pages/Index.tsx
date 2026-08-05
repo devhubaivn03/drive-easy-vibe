@@ -6,18 +6,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ContactWidget } from "@/components/landing/ContactWidget";
 import { ChatWidget } from "@/components/landing/ChatWidget";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RotatingImage } from "@/components/landing/RotatingImage";
 import {
   Bike, Car, LogIn, GraduationCap, Clock, Award, Users, Star, Heart,
   Menu, X, Phone, Mail, MapPin, FileText, Image as ImageIcon, Wrench, Info, Home, BookOpen, Download
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, any> = {
   Users, GraduationCap, Clock, Award, Bike, Car, Star, Heart,
   Wrench, FileText, ImageIcon, Info, BookOpen, Phone, Mail, MapPin, Download,
 };
 
-const NAV_LINKS = [
+const DEFAULT_NAV_LINKS = [
   { id: "home", label: "Trang chủ", icon: Home },
   { id: "about", label: "Giới thiệu", icon: Info },
   { id: "courses", label: "Khóa học", icon: BookOpen },
@@ -25,6 +27,14 @@ const NAV_LINKS = [
   { id: "gallery", label: "Hình ảnh", icon: ImageIcon },
   { id: "documents", label: "Tài liệu", icon: FileText },
   { id: "contact", label: "Liên hệ", icon: Phone },
+];
+
+export const DEFAULT_HERO_SLIDES = [
+  { caption: "Sân tập rộng rãi", images: ["https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1000"] },
+  { caption: "Xe tập đời mới", images: ["https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=1000"] },
+  { caption: "Học viên thực hành", images: ["https://images.unsplash.com/photo-1517512006864-7edc3b933137?w=1000"] },
+  { caption: "Phòng học lý thuyết", images: ["https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1000"] },
+  { caption: "Đội ngũ giáo viên", images: ["https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1000"] },
 ];
 
 export default function LandingPage() {
@@ -108,6 +118,12 @@ export default function LandingPage() {
     email: "info@drivemaster.vn",
     hours: "T2 - CN: 7:00 - 21:00",
   };
+  const navLabels: Record<string, string> = content?.nav_labels || {};
+  const NAV_LINKS = DEFAULT_NAV_LINKS.map((l) => ({ ...l, label: navLabels[l.id] || l.label }));
+  const coursesTitle = content?.courses_title || "Khóa học";
+  const heroGallery = content?.hero_gallery || { title: "Hình ảnh trung tâm", slides: DEFAULT_HERO_SLIDES };
+  const heroSlides: any[] = heroGallery.slides?.length ? heroGallery.slides : DEFAULT_HERO_SLIDES;
+  const footerNote = content?.footer_note || "";
 
   const scrollTo = (id: string) => {
     setMobileNav(false);
@@ -230,6 +246,34 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Hero image collage */}
+      <section className="relative px-4 pb-20 scroll-mt-16">
+        <div className="container mx-auto max-w-6xl">
+          {heroGallery.title && (
+            <h2 className="mb-8 text-center text-2xl md:text-3xl font-extrabold gradient-text">{heroGallery.title}</h2>
+          )}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="grid grid-cols-2 auto-rows-[9rem] gap-4 md:grid-cols-4 md:auto-rows-[11rem]"
+          >
+            {heroSlides.slice(0, 5).map((s: any, i: number) => (
+              <RotatingImage
+                key={i}
+                images={s.images || []}
+                caption={s.caption}
+                delayMs={i * 300}
+                className={cn(
+                  i === 0 && "col-span-2 row-span-2",
+                )}
+              />
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* About */}
       <section id="about" className="relative py-20 px-4 scroll-mt-16">
         <div className="container mx-auto max-w-6xl">
@@ -255,7 +299,7 @@ export default function LandingPage() {
       {/* Courses */}
       <section id="courses" className="relative py-20 px-4 bg-muted/30 scroll-mt-16">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 gradient-text">Khóa học</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 gradient-text">{coursesTitle}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -392,7 +436,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-4 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} {brandName}. All rights reserved.
+        © {new Date().getFullYear()} {brandName}. {footerNote || "All rights reserved."}
       </footer>
 
       {/* Motorbike Dialog */}

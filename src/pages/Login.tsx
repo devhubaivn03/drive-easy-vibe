@@ -1,12 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { Eye, EyeOff, LogIn, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth, getRoleDashboardPath } from "@/hooks/useAuth";
 import { toast } from "sonner";
+
+const TEST_PASSWORD = "Driveschool@2026";
+
+const TEST_ACCOUNTS: { email: string; name: string; role: string; label: string; color: string }[] = [
+  { email: "superadmin@driveschool.vn", name: "Super Admin", role: "superadmin", label: "SUPERADMIN", color: "gradient-primary text-primary-foreground" },
+  { email: "admin@driveschool.vn", name: "Nguyễn Văn Admin", role: "admin", label: "ADMIN", color: "bg-orange-500 text-primary-foreground" },
+  { email: "teacher1@driveschool.vn", name: "Trần Minh Thầy", role: "teacher", label: "GIÁO VIÊN", color: "gradient-accent text-accent-foreground" },
+  { email: "teacher2@driveschool.vn", name: "Lê Thị Cô", role: "teacher", label: "GIÁO VIÊN", color: "gradient-accent text-accent-foreground" },
+  { email: "staff1@driveschool.vn", name: "Phạm Nhân Viên", role: "staff", label: "NHÂN VIÊN", color: "bg-yellow-500 text-foreground" },
+  { email: "staff2@driveschool.vn", name: "Hoàng Văn Staff", role: "staff", label: "NHÂN VIÊN", color: "bg-yellow-500 text-foreground" },
+  { email: "hocvien1@driveschool.vn", name: "Đỗ Thanh Học", role: "client", label: "HỌC VIÊN", color: "bg-sky-500 text-primary-foreground" },
+  { email: "hocvien2@driveschool.vn", name: "Vũ Ngọc Mai", role: "client", label: "HỌC VIÊN", color: "bg-sky-500 text-primary-foreground" },
+  { email: "hocvien3@driveschool.vn", name: "Bùi Đức Anh", role: "client", label: "HỌC VIÊN", color: "bg-sky-500 text-primary-foreground" },
+  { email: "hocvien4@driveschool.vn", name: "Ngô Phương Linh", role: "client", label: "HỌC VIÊN", color: "bg-sky-500 text-primary-foreground" },
+  { email: "hocvien5@driveschool.vn", name: "Lý Minh Tuấn", role: "client", label: "HỌC VIÊN", color: "bg-sky-500 text-primary-foreground" },
+];
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -54,17 +70,18 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background grid-bg p-4">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full gradient-primary opacity-20 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full gradient-secondary opacity-20 blur-3xl" />
       </div>
 
+      <div className="relative z-10 grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="glass-card relative z-10 w-full max-w-md rounded-2xl p-8"
+        className="glass-card w-full rounded-2xl p-8"
       >
         <div className="mb-8 text-center">
           <h1 className="mb-2 text-3xl font-bold">
@@ -115,6 +132,43 @@ export default function Login() {
           </Button>
         </form>
       </motion.div>
+
+      {/* Test accounts — click to autofill */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="glass-card w-full rounded-2xl p-5"
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <Users size={18} className="text-primary" />
+          <h2 className="text-sm font-bold text-foreground">Tài khoản thử nghiệm — nhấn để tự điền</h2>
+        </div>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Mật khẩu chung: <span className="font-mono font-semibold text-foreground">{TEST_PASSWORD}</span>
+        </p>
+        <div className="grid max-h-[26rem] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+          {TEST_ACCOUNTS.map((a) => (
+            <button
+              key={a.email}
+              type="button"
+              onClick={() => {
+                setEmail(a.email);
+                setPassword(TEST_PASSWORD);
+                toast.success(`Đã điền: ${a.name}`);
+              }}
+              className="rounded-xl border border-border/60 bg-background/40 p-3 text-left transition-all hover:border-primary/60 hover:bg-primary/5"
+            >
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="truncate text-sm font-semibold text-foreground">{a.name}</span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${a.color}`}>{a.label}</span>
+              </div>
+              <span className="block truncate text-xs text-muted-foreground">{a.email}</span>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+      </div>
     </div>
   );
 }
