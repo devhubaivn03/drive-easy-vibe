@@ -12,6 +12,7 @@ import {
   Menu, X, Phone, Mail, MapPin, FileText, Image as ImageIcon, Wrench, Info, Home, BookOpen, Download
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, any> = {
   Users, GraduationCap, Clock, Award, Bike, Car, Star, Heart,
