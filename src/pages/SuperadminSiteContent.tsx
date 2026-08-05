@@ -35,6 +35,41 @@ interface GalleryInfo { title: string; images: GalleryImage[]; }
 interface DocumentItem { title: string; desc: string; url: string; }
 interface DocumentsInfo { title: string; items: DocumentItem[]; }
 interface ContactInfo { title: string; address: string; phone: string; email: string; hours: string; }
+interface HeroSlide { caption: string; images: string[]; }
+interface HeroGallery { title: string; slides: HeroSlide[]; }
+
+const NAV_IDS: { id: string; hint: string }[] = [
+  { id: "home", hint: "Trang chủ" },
+  { id: "about", hint: "Giới thiệu" },
+  { id: "courses", hint: "Khóa học" },
+  { id: "services", hint: "Dịch vụ" },
+  { id: "gallery", hint: "Hình ảnh" },
+  { id: "documents", hint: "Tài liệu" },
+  { id: "contact", hint: "Liên hệ" },
+];
+
+const SECTIONS = [
+  { id: "sc-general", label: "1. Thông tin chung" },
+  { id: "sc-nav", label: "2. Menu điều hướng" },
+  { id: "sc-hero-gallery", label: "3. Ảnh Trang chủ" },
+  { id: "sc-stats", label: "4. Thống kê" },
+  { id: "sc-motorbike", label: "5. Khóa Xe máy" },
+  { id: "sc-car", label: "6. Khóa Ô tô" },
+  { id: "sc-about", label: "7. Giới thiệu" },
+  { id: "sc-services", label: "8. Dịch vụ" },
+  { id: "sc-gallery", label: "9. Thư viện ảnh" },
+  { id: "sc-documents", label: "10. Tài liệu" },
+  { id: "sc-contact", label: "11. Liên hệ" },
+];
+
+async function uploadSiteImage(file: File): Promise<string | null> {
+  if (file.size > 10 * 1024 * 1024) { toast.error("Ảnh tối đa 10MB"); return null; }
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `site/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from("question-images").upload(path, file, { contentType: file.type, upsert: true });
+  if (error) { toast.error("Tải ảnh thất bại: " + error.message); return null; }
+  return supabase.storage.from("question-images").getPublicUrl(path).data.publicUrl;
+}
 
 function useNavItems(): NavItem[] {
   const [newLeads, setNewLeads] = useState(0);
