@@ -257,7 +257,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-2 gap-4 md:grid-cols-4 md:grid-rows-2 md:auto-rows-[11rem]"
+            className="grid grid-cols-2 auto-rows-[9rem] gap-4 md:grid-cols-4 md:auto-rows-[11rem]"
           >
             {heroSlides.slice(0, 5).map((s: any, i: number) => (
               <RotatingImage
@@ -266,9 +266,7 @@ export default function LandingPage() {
                 caption={s.caption}
                 delayMs={i * 300}
                 className={cn(
-                  "h-40 md:h-auto",
-                  i === 0 && "col-span-2 md:row-span-2 h-56 md:h-auto",
-                  i === 3 && "md:col-span-2",
+                  i === 0 && "col-span-2 row-span-2",
                 )}
               />
             ))}
