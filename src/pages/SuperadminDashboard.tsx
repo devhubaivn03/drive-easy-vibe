@@ -20,8 +20,8 @@ function useNavBadges() {
   useEffect(() => {
     const fetch = async () => {
       const [l, c] = await Promise.all([
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact" }).eq("status", "waiting"),
       ]);
       setNewLeads(l.count || 0);
       setWaitingChats(c.count || 0);
@@ -30,12 +30,12 @@ function useNavBadges() {
 
     const ch1 = supabase.channel("badge-leads")
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
+        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
       }).subscribe();
 
     const ch2 = supabase.channel("badge-chats")
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
+        supabase.from("chat_sessions").select("id", { count: "exact" }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
       }).subscribe();
 
     return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
@@ -74,11 +74,11 @@ function SuperadminOverview() {
   useEffect(() => {
     const fetchStats = async () => {
       const [admins, teachers, staff, clients, leads] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "admin"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "teacher"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "staff"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "client"),
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "admin"),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "teacher"),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "staff"),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "client"),
+        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
       ]);
       setStats({
         admins: admins.count || 0,

@@ -275,10 +275,10 @@ export default function AdminDashboard() {
     if (!profile) return;
     const fetchStats = async () => {
       const [s, t, c, l] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "staff").eq("admin_id", profile.id),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "teacher").eq("admin_id", profile.id),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "client").eq("admin_id", profile.id),
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "staff").eq("admin_id", profile.id),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "teacher").eq("admin_id", profile.id),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "client").eq("admin_id", profile.id),
+        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
       ]);
       setStats({ staff: s.count || 0, teachers: t.count || 0, clients: c.count || 0, leads: l.count || 0 });
       setLoading(false);

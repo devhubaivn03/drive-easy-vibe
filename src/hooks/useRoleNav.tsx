@@ -14,9 +14,9 @@ function useChatBadges() {
   useEffect(() => {
     const fetch = async () => {
       const [l, c, sc] = await Promise.all([
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
-        supabase.from("client_chats").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact" }).eq("status", "waiting"),
+        supabase.from("client_chats").select("id", { count: "exact" }).eq("status", "waiting"),
       ]);
       setNewLeads(l.count || 0);
       setWaitingChats(c.count || 0);
