@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { NavItem } from "@/components/DashboardLayout";
-import { LayoutDashboard, Users, GraduationCap, ClipboardList, MessageCircle, Settings, MessagesSquare, Pencil, BookOpenCheck, Archive, Network, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, ClipboardList, MessageCircle, Settings, MessagesSquare, Pencil, BookOpenCheck, Archive, Network, Building2, BookOpen, FileText, Bell } from "lucide-react";
 
 function useChatBadges() {
   const [newLeads, setNewLeads] = useState(0);
@@ -101,5 +101,17 @@ export function useSuperadminNav(): NavItem[] {
     { label: "Quản lý Câu hỏi", path: "/superadmin/questions", icon: <BookOpenCheck size={18} /> },
     { label: "Chat nội bộ", path: "/superadmin/internal-chat", icon: <Network size={18} />, badge: internalMsgs },
     { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
+  ];
+}
+
+export function useClientNav(): NavItem[] {
+  return [
+    { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
+    { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
+    { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
+    { label: "Chat với GV", path: "/client/chat-teacher", icon: <MessagesSquare size={18} /> },
+    { label: "Chat với nhân viên", path: "/client/chat-staff", icon: <Users size={18} /> },
+    { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
+    { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
   ];
 }
