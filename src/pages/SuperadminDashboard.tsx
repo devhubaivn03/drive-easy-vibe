@@ -13,50 +13,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
-function useNavBadges() {
-  const [newLeads, setNewLeads] = useState(0);
-  const [waitingChats, setWaitingChats] = useState(0);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const [l, c] = await Promise.all([
-        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
-        supabase.from("chat_sessions").select("id", { count: "exact" }).eq("status", "waiting"),
-      ]);
-      setNewLeads(l.count || 0);
-      setWaitingChats(c.count || 0);
-    };
-    fetch();
-
-    const ch1 = supabase.channel("badge-leads")
-      .on("postgres_changes", { event: "*", schema: "public", table: "contact_leads" }, () => {
-        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new").then(({ count }) => setNewLeads(count || 0));
-      }).subscribe();
-
-    const ch2 = supabase.channel("badge-chats")
-      .on("postgres_changes", { event: "*", schema: "public", table: "chat_sessions" }, () => {
-        supabase.from("chat_sessions").select("id", { count: "exact" }).eq("status", "waiting").then(({ count }) => setWaitingChats(count || 0));
-      }).subscribe();
-
-    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2); };
-  }, []);
-
-  return { newLeads, waitingChats };
-}
-
-function useNavItems(): NavItem[] {
-  const { newLeads, waitingChats } = useNavBadges();
-  return [
-    { label: "Tổng quan", path: "/superadmin", icon: <LayoutDashboard size={18} /> },
-    { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
-    { label: "Quản lý Chi nhánh", path: "/superadmin/branches", icon: <Building2 size={18} /> },
-    { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} />, badge: newLeads },
-    { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
-    { label: "Nội dung Trang chủ", path: "/superadmin/site-content", icon: <Pencil size={18} /> },
-    { label: "Quản lý Câu hỏi", path: "/superadmin/questions", icon: <BookOpenCheck size={18} /> },
-    { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
-  ];
-}
+// Sidebar dùng chung cho toàn bộ trang Superadmin
+const useNavItems = useSuperadminNav;
 
 export default function SuperadminDashboard() {
   const navItems = useNavItems();
@@ -73,19 +31,20 @@ function SuperadminOverview() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [admins, teachers, staff, clients, leads] = await Promise.all([
+      const [admins, teachers, staff, clients, leads] = await Promise.allSettled([
         supabase.from("profiles").select("id", { count: "exact" }).eq("role", "admin"),
         supabase.from("profiles").select("id", { count: "exact" }).eq("role", "teacher"),
         supabase.from("profiles").select("id", { count: "exact" }).eq("role", "staff"),
         supabase.from("profiles").select("id", { count: "exact" }).eq("role", "client"),
         supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
       ]);
+      const c = (r: any) => (r.status === "fulfilled" ? r.value.count || 0 : 0);
       setStats({
-        admins: admins.count || 0,
-        teachers: teachers.count || 0,
-        staff: staff.count || 0,
-        clients: clients.count || 0,
-        leads: leads.count || 0,
+        admins: c(admins),
+        teachers: c(teachers),
+        staff: c(staff),
+        clients: c(clients),
+        leads: c(leads),
       });
       setLoading(false);
     };
