@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useSuperadminNav } from "@/hooks/useRoleNav";
 
 // Sidebar dùng chung cho toàn bộ trang Superadmin
 const useNavItems = useSuperadminNav;

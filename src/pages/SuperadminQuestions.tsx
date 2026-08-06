@@ -8,25 +8,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Upload, Download, Trash2, FileSpreadsheet, BookOpen, FileText, Image as ImageIcon, Eye } from "lucide-react";
-import { LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings, BookOpenCheck } from "lucide-react";
+import { BookOpenCheck } from "lucide-react";
+import { useSuperadminNav } from "@/hooks/useRoleNav";
 import { parseExcelFile, ParsedSheet, getImageUrlByName } from "@/lib/examUtils";
 import { cn } from "@/lib/utils";
 
-function useNav(): NavItem[] {
-  return [
-    { label: "Tổng quan", path: "/superadmin", icon: <LayoutDashboard size={18} /> },
-    { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
-    { label: "Lead liên hệ", path: "/superadmin/leads", icon: <ClipboardList size={18} /> },
-    { label: "Hộp thư Chat", path: "/superadmin/chat", icon: <MessageCircle size={18} /> },
-    { label: "Nội dung Trang chủ", path: "/superadmin/site-content", icon: <Pencil size={18} /> },
-    { label: "Quản lý Câu hỏi", path: "/superadmin/questions", icon: <BookOpenCheck size={18} /> },
-    { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
-  ];
-}
+const useNav = useSuperadminNav;
 
 export default function SuperadminQuestions() {
+  const navItems = useNav();
   return (
-    <DashboardLayout navItems={useNav()} roleLabel="SUPERADMIN" roleColor="gradient-primary text-primary-foreground">
+    <DashboardLayout navItems={navItems} roleLabel="SUPERADMIN" roleColor="gradient-primary text-primary-foreground">
       <h1 className="mb-6 text-2xl font-bold text-foreground flex items-center gap-2">
         <BookOpenCheck size={26} /> Quản lý Câu hỏi
       </h1>

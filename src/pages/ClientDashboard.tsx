@@ -9,14 +9,7 @@ import { cn } from "@/lib/utils";
 import { ExamScoresDisplay, useExamResult } from "@/components/shared/ExamScores";
 import { MyClientChat } from "@/components/shared/ClientChatPanel";
 
-const navItems = [
-  { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
-  { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
-  { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
-  { label: "Chat với GV", path: "/client/chat-teacher", icon: <MessagesSquare size={18} /> },
-  { label: "Chat với nhân viên", path: "/client/chat-staff", icon: <Users size={18} /> },
-  { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
-];
+import { useClientNav } from "@/hooks/useRoleNav";
 
 export default function ClientDashboard() {
   const { profile } = useAuth();
