@@ -10,7 +10,8 @@ import "react-circular-progressbar/dist/styles.css";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-import { useClientNav } from "@/hooks/useRoleNav";
+import { CLIENT_NAV } from "@/hooks/useRoleNav";
+const navItems = CLIENT_NAV;
 
 const EXAM_DURATION = 22 * 60; // 22 phút
 

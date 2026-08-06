@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { ExamScoresDisplay, useExamResult } from "@/components/shared/ExamScores";
 import { MyClientChat } from "@/components/shared/ClientChatPanel";
 
-import { useClientNav } from "@/hooks/useRoleNav";
+import { CLIENT_NAV } from "@/hooks/useRoleNav";
+const navItems = CLIENT_NAV;
 
 export default function ClientDashboard() {
   const { profile } = useAuth();

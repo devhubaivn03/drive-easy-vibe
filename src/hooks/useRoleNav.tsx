@@ -104,14 +104,16 @@ export function useSuperadminNav(): NavItem[] {
   ];
 }
 
+export const CLIENT_NAV: NavItem[] = [
+  { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
+  { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
+  { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
+  { label: "Chat với GV", path: "/client/chat-teacher", icon: <MessagesSquare size={18} /> },
+  { label: "Chat với nhân viên", path: "/client/chat-staff", icon: <Users size={18} /> },
+  { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
+  { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
+];
+
 export function useClientNav(): NavItem[] {
-  return [
-    { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
-    { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
-    { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
-    { label: "Chat với GV", path: "/client/chat-teacher", icon: <MessagesSquare size={18} /> },
-    { label: "Chat với nhân viên", path: "/client/chat-staff", icon: <Users size={18} /> },
-    { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
-    { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
-  ];
+  return CLIENT_NAV;
 }

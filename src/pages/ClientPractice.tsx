@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-import { useClientNav } from "@/hooks/useRoleNav";
+import { CLIENT_NAV } from "@/hooks/useRoleNav";
+const navItems = CLIENT_NAV;
 
 type QStatus = "unseen" | "correct" | "wrong";
 
