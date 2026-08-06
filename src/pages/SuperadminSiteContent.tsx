@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useSuperadminNav } from "@/hooks/useRoleNav";
 import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
