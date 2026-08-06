@@ -7,14 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { label: "Dashboard", path: "/client", icon: <LayoutDashboard size={18} /> },
-  { label: "Ôn tập", path: "/client/practice", icon: <BookOpen size={18} /> },
-  { label: "Thi thử", path: "/client/exam", icon: <FileText size={18} /> },
-  { label: "Chat với GV", path: "/client/chat", icon: <MessagesSquare size={18} /> },
-  { label: "Thông báo", path: "/client/notifications", icon: <Bell size={18} /> },
-  { label: "Cài đặt", path: "/client/settings", icon: <Settings size={18} /> },
-];
+import { CLIENT_NAV } from "@/hooks/useRoleNav";
+const navItems = CLIENT_NAV;
 
 type QStatus = "unseen" | "correct" | "wrong";
 

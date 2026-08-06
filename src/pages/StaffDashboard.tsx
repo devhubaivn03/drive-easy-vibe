@@ -30,9 +30,9 @@ export default function StaffDashboard() {
     if (!profile) return;
     const fetchStats = async () => {
       const [c, l, ch] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "client"),
-        supabase.from("contact_leads").select("id", { count: "exact", head: true }).eq("status", "new"),
-        supabase.from("chat_sessions").select("id", { count: "exact", head: true }).eq("status", "waiting"),
+        supabase.from("profiles").select("id", { count: "exact" }).eq("role", "client"),
+        supabase.from("contact_leads").select("id", { count: "exact" }).eq("status", "new"),
+        supabase.from("chat_sessions").select("id", { count: "exact" }).eq("status", "waiting"),
       ]);
       setStats({ clients: c.count || 0, leads: l.count || 0, chats: ch.count || 0 });
       setLoading(false);

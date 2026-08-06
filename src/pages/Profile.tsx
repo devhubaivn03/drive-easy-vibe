@@ -5,7 +5,8 @@ import { ArrowLeft, Mail, Phone, Shield, Calendar, User as UserIcon, GraduationC
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { useCurrentRoleNav } from "@/hooks/useRoleNav";
 import { cn } from "@/lib/utils";
 
 const roleLabels: Record<string, { label: string; color: string }> = {
@@ -19,6 +20,7 @@ const roleLabels: Record<string, { label: string; color: string }> = {
 export default function Profile() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const navItems = useCurrentRoleNav();
   const [admin, setAdmin] = useState<any>(null);
   const [teacher, setTeacher] = useState<any>(null);
 
@@ -54,24 +56,14 @@ export default function Profile() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full gradient-primary opacity-20 blur-3xl" />
-        <div className="absolute top-1/2 -left-40 h-96 w-96 rounded-full gradient-secondary opacity-20 blur-3xl" />
-      </div>
-
-      <header className="sticky top-0 z-30 glass-card border-b border-border/50">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <DashboardLayout navItems={navItems} roleLabel={role.label.toUpperCase()} roleColor={role.color}>
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-4 flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
             <ArrowLeft size={18} /> Quay lại
           </Button>
           <span className="font-bold gradient-text">Hồ sơ cá nhân</span>
-          <ThemeToggle />
         </div>
-      </header>
-
-      <main className="container mx-auto max-w-4xl px-4 py-8 relative z-10">
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -151,8 +143,8 @@ export default function Profile() {
             </Button>
           </div>
         </motion.div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
