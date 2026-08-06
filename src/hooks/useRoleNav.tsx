@@ -48,8 +48,9 @@ function useChatBadges() {
   return { newLeads, waitingChats, studentMsgs, internalMsgs };
 }
 
-export function useAdminNav(): NavItem[] {
-  const { newLeads, waitingChats, studentMsgs, internalMsgs } = useChatBadges();
+type Badges = ReturnType<typeof useChatBadges>;
+
+function adminItems({ newLeads, waitingChats, studentMsgs, internalMsgs }: Badges): NavItem[] {
   return [
     { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
     { label: "Quản lý Staff", path: "/admin/staff", icon: <Users size={18} /> },
@@ -64,8 +65,7 @@ export function useAdminNav(): NavItem[] {
   ];
 }
 
-export function useStaffNav(): NavItem[] {
-  const { newLeads, waitingChats, studentMsgs, internalMsgs } = useChatBadges();
+function staffItems({ newLeads, waitingChats, studentMsgs, internalMsgs }: Badges): NavItem[] {
   return [
     { label: "Tổng quan", path: "/staff", icon: <LayoutDashboard size={18} /> },
     { label: "Quản lý Học viên", path: "/staff/clients", icon: <Users size={18} /> },
@@ -78,8 +78,7 @@ export function useStaffNav(): NavItem[] {
   ];
 }
 
-export function useTeacherNav(): NavItem[] {
-  const { internalMsgs } = useChatBadges();
+function teacherItems({ internalMsgs }: Badges): NavItem[] {
   return [
     { label: "Học viên của tôi", path: "/teacher", icon: <LayoutDashboard size={18} /> },
     { label: "Chat với học viên", path: "/teacher/student-chat", icon: <MessagesSquare size={18} /> },
@@ -88,8 +87,7 @@ export function useTeacherNav(): NavItem[] {
   ];
 }
 
-export function useSuperadminNav(): NavItem[] {
-  const { newLeads, waitingChats, internalMsgs } = useChatBadges();
+function superadminItems({ newLeads, waitingChats, internalMsgs }: Badges): NavItem[] {
   return [
     { label: "Tổng quan", path: "/superadmin", icon: <LayoutDashboard size={18} /> },
     { label: "Tất cả người dùng", path: "/superadmin/users", icon: <GraduationCap size={18} /> },
@@ -102,6 +100,25 @@ export function useSuperadminNav(): NavItem[] {
     { label: "Chat nội bộ", path: "/superadmin/internal-chat", icon: <Network size={18} />, badge: internalMsgs },
     { label: "Cài đặt", path: "/superadmin/settings", icon: <Settings size={18} /> },
   ];
+}
+
+export function useAdminNav(): NavItem[] { return adminItems(useChatBadges()); }
+export function useStaffNav(): NavItem[] { return staffItems(useChatBadges()); }
+export function useTeacherNav(): NavItem[] { return teacherItems(useChatBadges()); }
+export function useSuperadminNav(): NavItem[] { return superadminItems(useChatBadges()); }
+
+/** Sidebar tương ứng vai trò của người dùng đang đăng nhập */
+export function useCurrentRoleNav(): NavItem[] {
+  const { profile } = useAuth();
+  const badges = useChatBadges();
+  switch (profile?.role) {
+    case "superadmin": return superadminItems(badges);
+    case "admin": return adminItems(badges);
+    case "staff": return staffItems(badges);
+    case "teacher": return teacherItems(badges);
+    case "client": return CLIENT_NAV;
+    default: return [];
+  }
 }
 
 export const CLIENT_NAV: NavItem[] = [
