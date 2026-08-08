@@ -74,6 +74,14 @@ export function SuperadminUsers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [branchFilter, setBranchFilter] = useState("");
+  const [branches, setBranches] = useState<any[]>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    full_name: "", email: "", phone: "", password: "", role: "client",
+    branch_id: "", admin_id: "", teacher_id: "", license_type: "",
+  });
   const [editUser, setEditUser] = useState<any>(null);
   const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", role: "", license_type: "" });
   const [newPassword, setNewPassword] = useState("");
@@ -87,7 +95,48 @@ export function SuperadminUsers() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  const fetchBranches = async () => {
+    const { data } = await supabase.from("branches").select("id, name, is_active").order("name");
+    setBranches(data || []);
+  };
+
+  useEffect(() => { fetchUsers(); fetchBranches(); }, []);
+
+  const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name || "—";
+  const adminsInBranch = users.filter((u) => u.role === "admin" && (!createForm.branch_id || u.branch_id === createForm.branch_id));
+  const teachersInBranch = users.filter((u) => u.role === "teacher" && (!createForm.branch_id || u.branch_id === createForm.branch_id));
+
+  const createUser = async () => {
+    if (!createForm.full_name.trim() || !createForm.email.trim() || createForm.password.length < 6) {
+      toast.error("Nhập họ tên, email và mật khẩu tối thiểu 6 ký tự");
+      return;
+    }
+    if (createForm.role !== "admin" && !createForm.branch_id) {
+      toast.error("Vui lòng chọn chi nhánh");
+      return;
+    }
+    setCreating(true);
+    const { data, error } = await supabase.functions.invoke("admin-create-user", {
+      body: {
+        email: createForm.email.trim(),
+        password: createForm.password,
+        full_name: createForm.full_name.trim(),
+        phone: createForm.phone.trim() || null,
+        role: createForm.role,
+        branch_id: createForm.branch_id || null,
+        admin_id: createForm.admin_id || null,
+        teacher_id: createForm.teacher_id || null,
+        license_type: createForm.license_type || null,
+      },
+    });
+    setCreating(false);
+    if (error) return toast.error("Tạo thất bại: " + error.message);
+    if ((data as any)?.error) return toast.error("Tạo thất bại: " + (data as any).error);
+    toast.success("Đã tạo tài khoản!");
+    setCreateOpen(false);
+    setCreateForm({ full_name: "", email: "", phone: "", password: "", role: "client", branch_id: "", admin_id: "", teacher_id: "", license_type: "" });
+    fetchUsers();
+  };
 
   const openEdit = (user: any) => {
     setEditUser(user);
@@ -146,7 +195,8 @@ export function SuperadminUsers() {
     const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       u.email?.toLowerCase().includes(search.toLowerCase());
     const matchRole = !roleFilter || u.role === roleFilter;
-    return matchSearch && matchRole;
+    const matchBranch = !branchFilter || u.branch_id === branchFilter;
+    return matchSearch && matchRole && matchBranch;
   });
 
   const roleBadge = (role: string) => {
@@ -162,7 +212,12 @@ export function SuperadminUsers() {
 
   return (
     <DashboardLayout navItems={navItems} roleLabel="SUPERADMIN" roleColor="gradient-primary text-primary-foreground">
-      <h1 className="mb-6 text-2xl font-bold text-foreground">Tất cả người dùng</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-foreground">Tất cả người dùng</h1>
+        <Button variant="hero" className="rounded-xl gap-2" onClick={() => setCreateOpen(true)}>
+          <UserPlus size={16} /> Tạo tài khoản
+        </Button>
+      </div>
 
       <div className="mb-4 flex flex-wrap gap-3">
         <Input placeholder="Tìm kiếm..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs rounded-xl" />
@@ -174,6 +229,10 @@ export function SuperadminUsers() {
           <option value="staff">Nhân viên</option>
           <option value="client">Học viên</option>
         </select>
+        <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} className="rounded-xl border border-input bg-background px-3 py-2 text-sm">
+          <option value="">Tất cả chi nhánh</option>
+          {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
       </div>
 
       {loading ? <TableSkeleton /> : (
@@ -183,6 +242,7 @@ export function SuperadminUsers() {
               <th className="p-4 font-semibold text-muted-foreground">Họ tên</th>
               <th className="p-4 font-semibold text-muted-foreground">Email</th>
               <th className="p-4 font-semibold text-muted-foreground">Role</th>
+              <th className="p-4 font-semibold text-muted-foreground">Chi nhánh</th>
               <th className="p-4 font-semibold text-muted-foreground">SĐT</th>
               <th className="p-4 font-semibold text-muted-foreground">Hành động</th>
             </tr></thead>
@@ -192,6 +252,7 @@ export function SuperadminUsers() {
                   <td className="p-4 font-medium text-foreground">{u.full_name}</td>
                   <td className="p-4 text-muted-foreground">{u.email}</td>
                   <td className="p-4">{roleBadge(u.role)}</td>
+                  <td className="p-4 text-muted-foreground">{branchName(u.branch_id)}</td>
                   <td className="p-4 text-muted-foreground">{u.phone || "—"}</td>
                   <td className="p-4 flex gap-2">
                     <Button size="sm" variant="outline" className="rounded-lg" onClick={() => openEdit(u)}>
