@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, MessageSquare, Paperclip, FileText, Search, MoreVertical, Undo2, Trash2 } from "lucide-react";
+import { Send, MessageSquare, Paperclip, FileText, Search, MoreVertical, Undo2, Trash2, Building2, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -67,8 +67,11 @@ function AttachmentView({ m }: { m: any }) {
 }
 
 export function InternalChatPanel() {
-  const { profile } = useAuth();
+  const { profile, branch } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [mode, setMode] = useState<"branch" | "cross">("branch");
+  const [crossBranchId, setCrossBranchId] = useState<string | null>(null);
   const [chats, setChats] = useState<any[]>([]);
   const [activePeer, setActivePeer] = useState<any | null>(null);
   const [activeChat, setActiveChat] = useState<any | null>(null);
@@ -85,7 +88,7 @@ export function InternalChatPanel() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, email, role, avatar_url")
+        .select("id, full_name, email, role, avatar_url, branch_id")
         .in("role", INTERNAL_ROLES as unknown as InternalRole[])
         .neq("id", profile.id)
         .is("deleted_at", null)
@@ -93,6 +96,14 @@ export function InternalChatPanel() {
       setUsers(data || []);
     })();
   }, [profile]);
+
+  // Danh sách chi nhánh (cho chế độ chat liên chi nhánh)
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("branches").select("id, name, code").order("name");
+      setBranches(data || []);
+    })();
+  }, []);
 
   // Load my chats
   const loadChats = async () => {
@@ -222,8 +233,16 @@ export function InternalChatPanel() {
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = users;
+    if (mode === "branch") {
+      // Chỉ người cùng chi nhánh (superadmin không có ràng buộc chi nhánh nên xem tất cả)
+      if (profile?.role !== "superadmin") {
+        list = list.filter((u) => u.branch_id === (profile?.branch_id ?? null));
+      }
+    } else {
+      list = list.filter((u) => (crossBranchId ? u.branch_id === crossBranchId : false));
+    }
     if (q) {
-      list = users.filter((u) =>
+      list = list.filter((u) =>
         u.full_name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q) ||
         ROLE_LABEL[u.role]?.toLowerCase().includes(q)
@@ -238,7 +257,11 @@ export function InternalChatPanel() {
       if (ca && cb) return new Date(cb.last_message_at).getTime() - new Date(ca.last_message_at).getTime();
       return (a.full_name || "").localeCompare(b.full_name || "");
     });
-  }, [users, search, chatByPeerId]);
+  }, [users, search, chatByPeerId, mode, crossBranchId, profile]);
+
+  const branchName = (id: string | null) => branches.find((b) => b.id === id)?.name || "Chưa gán chi nhánh";
+  const showCrossTab = profile?.role === "admin" || profile?.role === "teacher" || profile?.role === "staff";
+  const otherBranches = branches.filter((b) => b.id !== profile?.branch_id);
 
   const isUnread = (c: any) => {
     if (!c || !profile) return false;
@@ -251,14 +274,45 @@ export function InternalChatPanel() {
     <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-220px)]">
       <div className="md:w-80 glass-card rounded-2xl flex flex-col flex-shrink-0 min-h-0">
         <div className="p-3 border-b border-border/50">
-          <p className="font-semibold text-foreground text-sm mb-2">Người dùng nội bộ</p>
+          {showCrossTab ? (
+            <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1">
+              <button
+                onClick={() => { setMode("branch"); setCrossBranchId(null); }}
+                className={cn("rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors flex items-center justify-center gap-1",
+                  mode === "branch" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}>
+                <Building2 size={13} /> {branch?.name || "Chi nhánh của tôi"}
+              </button>
+              <button
+                onClick={() => setMode("cross")}
+                className={cn("rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors flex items-center justify-center gap-1",
+                  mode === "cross" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}>
+                <Network size={13} /> Chat liên chi nhánh
+              </button>
+            </div>
+          ) : (
+            <p className="font-semibold text-foreground text-sm mb-2">Người dùng nội bộ</p>
+          )}
+          {mode === "cross" && (
+            <div className="mb-2 flex flex-wrap gap-1">
+              {otherBranches.length === 0 && <p className="text-xs text-muted-foreground">Chưa có chi nhánh khác.</p>}
+              {otherBranches.map((b) => (
+                <button key={b.id} onClick={() => setCrossBranchId(b.id)}
+                  className={cn("rounded-full border px-2 py-1 text-[11px] font-medium transition-colors",
+                    crossBranchId === b.id ? "gradient-primary text-primary-foreground border-transparent" : "border-border text-muted-foreground hover:bg-muted/40")}>
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Tìm tên, email, vai trò..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 rounded-xl h-9 text-sm" />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {filteredUsers.length === 0 && <p className="p-4 text-sm text-muted-foreground text-center">Không tìm thấy người dùng</p>}
+          {mode === "cross" && !crossBranchId
+            ? <p className="p-4 text-sm text-muted-foreground text-center">Chọn một chi nhánh phía trên để tìm tài khoản.</p>
+            : filteredUsers.length === 0 && <p className="p-4 text-sm text-muted-foreground text-center">Không tìm thấy người dùng</p>}
           {filteredUsers.map((u) => {
             const c = chatByPeerId.get(u.id);
             const unread = c && isUnread(c) && activePeer?.id !== u.id;
@@ -280,6 +334,7 @@ export function InternalChatPanel() {
                     <span className={cn("text-[10px] rounded-full px-1.5 py-0.5 font-semibold", ROLE_BADGE[u.role])}>
                       {ROLE_LABEL[u.role]}
                     </span>
+                    {mode === "cross" && <span className="text-[10px] text-muted-foreground truncate">{branchName(u.branch_id)}</span>}
                     <span className="text-[10px] text-muted-foreground truncate">{u.email}</span>
                   </div>
                 </div>
