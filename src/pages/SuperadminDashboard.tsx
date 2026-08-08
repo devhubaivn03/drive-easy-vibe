@@ -368,7 +368,7 @@ export function SuperadminUsers() {
             <div><Label>Số điện thoại</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="rounded-xl" /></div>
             <div>
               <Label>Vai trò</Label>
-              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
+              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })} disabled={editUser?.id === me?.id}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="superadmin">Superadmin</SelectItem>
@@ -376,6 +376,19 @@ export function SuperadminUsers() {
                   <SelectItem value="teacher">Giáo viên</SelectItem>
                   <SelectItem value="staff">Nhân viên</SelectItem>
                   <SelectItem value="client">Học viên</SelectItem>
+                </SelectContent>
+              </Select>
+              {editUser?.id === me?.id && (
+                <p className="mt-1 text-xs text-muted-foreground">Không thể tự đổi vai trò của chính mình.</p>
+              )}
+            </div>
+            <div>
+              <Label>Chi nhánh</Label>
+              <Select value={editForm.branch_id || "none"} onValueChange={(v) => setEditForm({ ...editForm, branch_id: v === "none" ? "" : v })}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn chi nhánh" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Không thuộc chi nhánh —</SelectItem>
+                  {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
