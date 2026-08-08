@@ -70,6 +70,7 @@ function SuperadminOverview() {
 
 export function SuperadminUsers() {
   const navItems = useNavItems();
+  const { profile: me, refreshProfile } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -83,7 +84,7 @@ export function SuperadminUsers() {
     branch_id: "", admin_id: "", teacher_id: "", license_type: "",
   });
   const [editUser, setEditUser] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", role: "", license_type: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", role: "", license_type: "", branch_id: "" });
   const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [passwordDialogUser, setPasswordDialogUser] = useState<any>(null);
@@ -146,18 +147,27 @@ export function SuperadminUsers() {
       phone: user.phone || "",
       role: user.role || "client",
       license_type: user.license_type || "",
+      branch_id: user.branch_id || "",
     });
   };
 
   const saveProfile = async () => {
     if (!editUser) return;
+    const isSelf = editUser.id === me?.id;
+    if (!editForm.full_name.trim()) {
+      toast.error("Họ tên không được để trống");
+      return;
+    }
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      full_name: editForm.full_name,
+    const payload: any = {
+      full_name: editForm.full_name.trim(),
       phone: editForm.phone || null,
-      role: editForm.role as any,
       license_type: (editForm.license_type || null) as any,
-    }).eq("id", editUser.id);
+      branch_id: editForm.branch_id || null,
+    };
+    // Không cho tự hạ quyền chính mình (tránh mất quyền superadmin)
+    if (!isSelf) payload.role = editForm.role as any;
+    const { error } = await supabase.from("profiles").update(payload).eq("id", editUser.id);
 
     if (error) {
       toast.error("Lưu thất bại: " + error.message);
@@ -165,6 +175,7 @@ export function SuperadminUsers() {
       toast.success("Cập nhật thành công!");
       setEditUser(null);
       fetchUsers();
+      if (isSelf) await refreshProfile();
     }
     setSaving(false);
   };
