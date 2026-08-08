@@ -275,6 +275,11 @@ export function SuperadminUsers() {
             <DialogTitle>Chỉnh sửa người dùng</DialogTitle>
             <DialogDescription>Cập nhật thông tin profile của người dùng</DialogDescription>
           </DialogHeader>
+        <DialogContent className="glass-card">
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa người dùng</DialogTitle>
+            <DialogDescription>Cập nhật thông tin profile của người dùng</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4">
             <div><Label>Họ tên</Label><Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} className="rounded-xl" /></div>
             <div><Label>Email (không thể đổi)</Label><Input value={editForm.email} disabled className="rounded-xl opacity-60" /></div>
