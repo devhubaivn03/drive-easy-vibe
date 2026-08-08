@@ -269,12 +269,83 @@ export function SuperadminUsers() {
         </div>
       )}
 
-      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
-        <DialogContent className="glass-card">
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="glass-card max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Chỉnh sửa người dùng</DialogTitle>
-            <DialogDescription>Cập nhật thông tin profile của người dùng</DialogDescription>
+            <DialogTitle>Tạo tài khoản mới</DialogTitle>
+            <DialogDescription>Superadmin có thể tạo Admin, Giáo viên, Nhân viên, Học viên và gán chi nhánh</DialogDescription>
           </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Vai trò *</Label>
+              <Select value={createForm.role} onValueChange={(v) => setCreateForm({ ...createForm, role: v, admin_id: "", teacher_id: "", license_type: "" })}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="teacher">Giáo viên</SelectItem>
+                  <SelectItem value="staff">Nhân viên</SelectItem>
+                  <SelectItem value="client">Học viên</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Chi nhánh *</Label>
+              <Select value={createForm.branch_id || "none"} onValueChange={(v) => setCreateForm({ ...createForm, branch_id: v === "none" ? "" : v, admin_id: "", teacher_id: "" })}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn chi nhánh" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Chọn chi nhánh —</SelectItem>
+                  {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}{b.is_active ? "" : " (tạm dừng)"}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {createForm.role !== "admin" && (
+              <div>
+                <Label>Thuộc Admin quản lý</Label>
+                <Select value={createForm.admin_id || "none"} onValueChange={(v) => setCreateForm({ ...createForm, admin_id: v === "none" ? "" : v })}>
+                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn admin" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Không chọn —</SelectItem>
+                    {adminsInBranch.map((a) => <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {createForm.role === "client" && (
+              <>
+                <div>
+                  <Label>Giáo viên phụ trách</Label>
+                  <Select value={createForm.teacher_id || "none"} onValueChange={(v) => setCreateForm({ ...createForm, teacher_id: v === "none" ? "" : v })}>
+                    <SelectTrigger className="rounded-xl"><SelectValue placeholder="Chọn giáo viên" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Không chọn —</SelectItem>
+                      {teachersInBranch.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Loại bằng</Label>
+                  <Select value={createForm.license_type || "none"} onValueChange={(v) => setCreateForm({ ...createForm, license_type: v === "none" ? "" : v })}>
+                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Không có</SelectItem>
+                      {["A1","A2","B1","B2","C","D","E","F"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+            <div><Label>Họ tên *</Label><Input value={createForm.full_name} onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Email *</Label><Input type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Số điện thoại</Label><Input value={createForm.phone} onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })} className="rounded-xl" /></div>
+            <div><Label>Mật khẩu *</Label><Input type="text" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} placeholder="Tối thiểu 6 ký tự" className="rounded-xl" /></div>
+            <Button variant="hero" className="w-full rounded-xl" onClick={createUser} disabled={creating}>
+              {creating ? "Đang tạo..." : "Tạo tài khoản"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="glass-card">
           <DialogHeader>
             <DialogTitle>Chỉnh sửa người dùng</DialogTitle>
