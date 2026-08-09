@@ -189,6 +189,28 @@ export default function LandingPage() {
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full gradient-secondary opacity-20 blur-3xl" />
         <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full gradient-accent opacity-15 blur-3xl" />
 
+        {/* Background collage: 4 ảnh nằm trên nền chấm bi, dưới nội dung */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 grid grid-cols-2 grid-rows-12 gap-3 p-3 opacity-25 dark:opacity-20 md:gap-5 md:p-6"
+          style={{ maskImage: "radial-gradient(120% 100% at 50% 40%, transparent 30%, black 78%)", WebkitMaskImage: "radial-gradient(120% 100% at 50% 40%, transparent 30%, black 78%)" }}
+          aria-hidden="true"
+        >
+          {heroSlides.slice(0, 4).map((s: any, i: number) => (
+            <RotatingImage
+              key={i}
+              images={s.images || []}
+              delayMs={i * 300}
+              className={cn(
+                "border-0 bg-transparent",
+                i === 0 && "col-start-1 row-start-1 row-span-5",
+                i === 1 && "col-start-2 row-start-1 row-span-7",
+                i === 2 && "col-start-1 row-start-6 row-span-7",
+                i === 3 && "col-start-2 row-start-8 row-span-5",
+              )}
+            />
+          ))}
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
