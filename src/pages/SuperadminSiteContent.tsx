@@ -307,6 +307,9 @@ function SiteContentEditor() {
         <p className="text-xs text-muted-foreground">
           Mỗi <strong>ô ảnh</strong> là một khung trên trang chủ. Nếu một ô có <strong>2 ảnh trở lên</strong>, các ảnh sẽ tự động
           đổi sau mỗi <strong>2 giây</strong>. Chỉ 5 ô đầu tiên được hiển thị.
+          <br />
+          <strong>4 ô đầu tiên</strong> còn được dùng làm <strong>ảnh nền mờ của Hero trang chủ</strong>
+          (nằm trên nền chấm bi, phía dưới chữ và các thẻ thông tin).
         </p>
         <div>
           <Label>Tiêu đề khối ảnh</Label>
