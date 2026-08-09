@@ -25,6 +25,7 @@ import ClientExam from "./pages/ClientExam";
 import SuperadminQuestions from "./pages/SuperadminQuestions";
 import Profile from "./pages/Profile";
 import { AdminClientHistory, StaffClientHistory, SuperadminClientHistory } from "./pages/ClientHistory";
+import { AdminStaffHistory, SuperadminStaffHistory } from "./pages/StaffHistory";
 import { AdminInternalChat, StaffInternalChat, SuperadminInternalChat, TeacherInternalChat } from "./pages/InternalChat";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/superadmin/branches" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminBranches /></ProtectedRoute>} />
             <Route path="/superadmin/questions" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminQuestions /></ProtectedRoute>} />
             <Route path="/superadmin/client-history" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminClientHistory /></ProtectedRoute>} />
+            <Route path="/superadmin/staff-history" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminStaffHistory /></ProtectedRoute>} />
             <Route path="/superadmin/internal-chat" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminInternalChat /></ProtectedRoute>} />
             <Route path="/superadmin/settings" element={<ProtectedRoute allowedRoles={["superadmin"]}><SuperadminSettings /></ProtectedRoute>} />
 
@@ -65,6 +67,7 @@ const App = () => (
             <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={["admin"]}><AdminChat /></ProtectedRoute>} />
             <Route path="/admin/student-chat" element={<ProtectedRoute allowedRoles={["admin"]}><AdminStudentChat /></ProtectedRoute>} />
             <Route path="/admin/client-history" element={<ProtectedRoute allowedRoles={["admin"]}><AdminClientHistory /></ProtectedRoute>} />
+            <Route path="/admin/staff-history" element={<ProtectedRoute allowedRoles={["admin"]}><AdminStaffHistory /></ProtectedRoute>} />
             <Route path="/admin/internal-chat" element={<ProtectedRoute allowedRoles={["admin"]}><AdminInternalChat /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={["admin"]}><AdminSettings /></ProtectedRoute>} />
 
