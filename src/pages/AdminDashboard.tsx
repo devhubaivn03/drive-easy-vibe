@@ -246,6 +246,16 @@ function UserManagementPage({
                       {role === "client" && (
                         <SoftDeleteClientDialogButton clientId={u.id} clientName={u.full_name} onDeleted={fetchUsers} />
                       )}
+                      {role !== "client" && (
+                        <SoftDeleteClientDialogButton
+                          clientId={u.id}
+                          clientName={u.full_name}
+                          entityLabel={role === "teacher" ? "giáo viên" : "nhân viên"}
+                          historyLabel="Lịch sử nhân viên"
+                          requireYes
+                          onDeleted={fetchUsers}
+                        />
+                      )}
                     </div>
                   </td>
                 </tr>

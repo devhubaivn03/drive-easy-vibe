@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useSuperadminNav } from "@/hooks/useRoleNav";
+import { SoftDeleteClientDialogButton } from "@/components/shared/SoftDeleteClientDialog";
 
 // Sidebar dùng chung cho toàn bộ trang Superadmin
 const useNavItems = useSuperadminNav;
@@ -91,7 +92,11 @@ export function SuperadminUsers() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
     setUsers(data || []);
     setLoading(false);
   };
@@ -272,6 +277,16 @@ export function SuperadminUsers() {
                     <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { setPasswordDialogUser(u); setNewPassword(""); }}>
                       <KeyRound size={14} /> MK
                     </Button>
+                    {u.id !== me?.id && (
+                      <SoftDeleteClientDialogButton
+                        clientId={u.id}
+                        clientName={u.full_name}
+                        entityLabel={u.role === "client" ? "học viên" : "tài khoản"}
+                        historyLabel={u.role === "client" ? "Lịch sử học viên" : "Lịch sử nhân viên"}
+                        requireYes
+                        onDeleted={fetchUsers}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}
