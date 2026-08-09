@@ -200,6 +200,7 @@ export default function LandingPage() {
               key={i}
               images={s.images || []}
               delayMs={i * 300}
+              showDots={false}
               className={cn(
                 "border-0 bg-transparent",
                 i === 0 && "col-start-1 row-start-1 row-span-5",
