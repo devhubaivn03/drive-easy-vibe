@@ -8,10 +8,11 @@ interface RotatingImageProps {
   className?: string;
   intervalMs?: number;
   delayMs?: number;
+  showDots?: boolean;
 }
 
 /** Shows one image; if more than one is provided it cross-fades every 2s. */
-export function RotatingImage({ images, caption, className, intervalMs = 2000, delayMs = 0 }: RotatingImageProps) {
+export function RotatingImage({ images, caption, className, intervalMs = 2000, delayMs = 0, showDots = true }: RotatingImageProps) {
   const list = (images || []).filter(Boolean);
   const [index, setIndex] = useState(0);
 
@@ -52,7 +53,7 @@ export function RotatingImage({ images, caption, className, intervalMs = 2000, d
           {caption}
         </div>
       )}
-      {list.length > 1 && (
+      {showDots && list.length > 1 && (
         <div className="absolute right-2 top-2 z-10 flex gap-1">
           {list.map((_, i) => (
             <span key={i} className={cn("h-1.5 w-1.5 rounded-full transition-colors", i === index ? "bg-primary" : "bg-foreground/30")} />
