@@ -267,7 +267,7 @@ export default function LandingPage() {
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || Users;
             return (
-              <div key={i} className="glass-card rounded-2xl p-6 text-center">
+              <div key={i} className="glass-card bg-background/85 rounded-2xl p-6 text-center">
                 <Icon className="mx-auto mb-2 h-8 w-8 text-primary" />
                 <div className="text-2xl font-extrabold gradient-text">{stat.value}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
