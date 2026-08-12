@@ -236,7 +236,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
             whileHover={{ scale: 1.05 }} onClick={() => setMotorbikeOpen(true)}
-            className="group cursor-pointer glass-card rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
+            className="group cursor-pointer glass-card bg-background/85 rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
           >
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-primary">
               <Bike className="h-10 w-10 text-primary-foreground" />
@@ -249,7 +249,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
             whileHover={{ scale: 1.05 }} onClick={() => setCarOpen(true)}
-            className="group cursor-pointer glass-card rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
+            className="group cursor-pointer glass-card bg-background/85 rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
           >
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-secondary">
               <Car className="h-10 w-10 text-secondary-foreground" />
