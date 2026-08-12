@@ -191,8 +191,7 @@ export default function LandingPage() {
 
         {/* Background collage: 4 ảnh nằm trên nền chấm bi, dưới nội dung */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grid grid-cols-2 grid-rows-12 gap-3 p-3 opacity-25 dark:opacity-20 md:gap-5 md:p-6"
-          style={{ maskImage: "radial-gradient(120% 100% at 50% 40%, transparent 30%, black 78%)", WebkitMaskImage: "radial-gradient(120% 100% at 50% 40%, transparent 30%, black 78%)" }}
+          className="pointer-events-none absolute inset-0 z-0 grid grid-cols-2 grid-rows-12 gap-3 p-3 md:gap-5 md:p-6"
           aria-hidden="true"
         >
           {heroSlides.slice(0, 4).map((s: any, i: number) => (
@@ -211,6 +210,15 @@ export default function LandingPage() {
             />
           ))}
         </div>
+
+        {/* Overlay làm mờ ảnh nền để nội dung hero dễ đọc */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[5]"
+          style={{
+            background: "radial-gradient(120% 100% at 50% 35%, hsl(var(--background) / 0.72) 25%, hsl(var(--background) / 0.35) 55%, hsl(var(--background) / 0.75) 100%)"
+          }}
+          aria-hidden="true"
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
