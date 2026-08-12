@@ -62,6 +62,7 @@ function adminItems({ newLeads, waitingChats, studentMsgs, internalMsgs }: Badge
     { label: "Hộp thư Chat", path: "/admin/chat", icon: <MessageCircle size={18} />, badge: waitingChats },
     { label: "Chat với học viên", path: "/admin/student-chat", icon: <MessagesSquare size={18} />, badge: studentMsgs },
     { label: "Chat nội bộ", path: "/admin/internal-chat", icon: <Network size={18} />, badge: internalMsgs },
+    { label: "Nội dung Trang chủ", path: "/admin/site-content", icon: <Pencil size={18} /> },
     { label: "Cài đặt", path: "/admin/settings", icon: <Settings size={18} /> },
   ];
 }
