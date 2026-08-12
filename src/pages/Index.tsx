@@ -191,8 +191,7 @@ export default function LandingPage() {
 
         {/* Background collage: 4 ảnh nằm trên nền chấm bi, dưới nội dung */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 grid grid-cols-2 grid-rows-12 gap-3 p-3 opacity-25 dark:opacity-20 md:gap-5 md:p-6"
-          style={{ maskImage: "radial-gradient(120% 100% at 50% 40%, transparent 30%, black 78%)", WebkitMaskImage: "radial-gradient(120% 100% at 50% 40%, transparent 30%, black 78%)" }}
+          className="pointer-events-none absolute inset-0 z-0 grid grid-cols-2 grid-rows-12 gap-3 p-3 md:gap-5 md:p-6"
           aria-hidden="true"
         >
           {heroSlides.slice(0, 4).map((s: any, i: number) => (
@@ -212,23 +211,32 @@ export default function LandingPage() {
           ))}
         </div>
 
+        {/* Overlay làm mờ ảnh nền để nội dung hero dễ đọc */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[5]"
+          style={{
+            background: "radial-gradient(120% 100% at 50% 35%, hsl(var(--background) / 0.55) 25%, hsl(var(--background) / 0.2) 55%, hsl(var(--background) / 0.6) 100%)"
+          }}
+          aria-hidden="true"
+        />
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="relative z-10 text-center"
+          className="relative z-10 mx-auto max-w-4xl text-center glass-card bg-background/80 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 shadow-2xl"
         >
           <h1 className="mb-4 text-4xl font-extrabold leading-tight md:text-6xl lg:text-7xl">
             Học Lái Xe — <span className="gradient-text">{heroTitle1}</span> & <span className="gradient-text-accent">{heroTitle2}</span>
           </h1>
-          <p className="mx-auto mb-12 max-w-2xl text-lg text-muted-foreground">{heroSubtitle}</p>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">{heroSubtitle}</p>
         </motion.div>
 
         <div className="relative z-10 flex flex-col gap-8 md:flex-row">
           <motion.div
             initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
             whileHover={{ scale: 1.05 }} onClick={() => setMotorbikeOpen(true)}
-            className="group cursor-pointer glass-card rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
+            className="group cursor-pointer glass-card bg-background/85 rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
           >
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-primary">
               <Bike className="h-10 w-10 text-primary-foreground" />
@@ -241,7 +249,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
             whileHover={{ scale: 1.05 }} onClick={() => setCarOpen(true)}
-            className="group cursor-pointer glass-card rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
+            className="group cursor-pointer glass-card bg-background/85 rounded-3xl p-8 w-72 text-center transition-all duration-500 hover:shadow-2xl"
           >
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl gradient-secondary">
               <Car className="h-10 w-10 text-secondary-foreground" />
@@ -259,7 +267,7 @@ export default function LandingPage() {
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || Users;
             return (
-              <div key={i} className="glass-card rounded-2xl p-6 text-center">
+              <div key={i} className="glass-card bg-background/85 rounded-2xl p-6 text-center">
                 <Icon className="mx-auto mb-2 h-8 w-8 text-primary" />
                 <div className="text-2xl font-extrabold gradient-text">{stat.value}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
