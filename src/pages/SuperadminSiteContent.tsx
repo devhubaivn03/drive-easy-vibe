@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useSuperadminNav } from "@/hooks/useRoleNav";
+import { useCurrentRoleNav } from "@/hooks/useRoleNav";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout, NavItem } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Globe, LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings, Info, Wrench, Image as ImageIcon, FileText, Phone } from "lucide-react";
+import { Save, Plus, Trash2, Globe, LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings, Info, Wrench, Image as ImageIcon, FileText, Phone, Building2 } from "lucide-react";
 
 interface StatItem {
   icon: string;
@@ -72,20 +73,26 @@ async function uploadSiteImage(file: File): Promise<string | null> {
   return supabase.storage.from("question-images").getPublicUrl(path).data.publicUrl;
 }
 
-const useNavItems = useSuperadminNav;
-
 export default function SuperadminSiteContent() {
-  const navItems = useNavItems();
+  const navItems = useCurrentRoleNav();
+  const { profile } = useAuth();
+  const isSuperadmin = profile?.role === "superadmin";
   return (
-    <DashboardLayout navItems={navItems} roleLabel="SUPERADMIN" roleColor="gradient-primary text-primary-foreground">
+    <DashboardLayout navItems={navItems} roleLabel={isSuperadmin ? "SUPERADMIN" : "ADMIN"} roleColor="gradient-primary text-primary-foreground">
       <SiteContentEditor />
     </DashboardLayout>
   );
 }
 
 function SiteContentEditor() {
+  const { profile } = useAuth();
+  const isSuperadmin = profile?.role === "superadmin";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+  // null = nội dung chung (mặc định cho toàn hệ thống)
+  const [branchId, setBranchId] = useState<string | null>(null);
+  const [branchReady, setBranchReady] = useState(false);
 
   // Content state
   const [brandName, setBrandName] = useState("DriveMaster");
@@ -116,11 +123,32 @@ function SiteContentEditor() {
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!profile) return;
+    if (isSuperadmin) {
+      supabase.from("branches").select("id, name").order("created_at").then(({ data }) => {
+        setBranches((data as any) || []);
+        setBranchReady(true);
+      });
+    } else {
+      setBranchId(profile.branch_id ?? null);
+      setBranchReady(true);
+    }
+  }, [profile?.id, isSuperadmin]);
+
+  useEffect(() => {
+    if (!branchReady) return;
     const fetchContent = async () => {
-      const { data } = await supabase.from("site_content").select("key, value");
-      if (data) {
+      setLoading(true);
+      const [globalRes, branchRes] = await Promise.all([
+        supabase.from("site_content").select("key, value").is("branch_id", null),
+        branchId
+          ? supabase.from("site_content").select("key, value").eq("branch_id", branchId)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const rows = [...((globalRes.data as any[]) || []), ...(((branchRes as any).data as any[]) || [])];
+      {
         const map: Record<string, any> = {};
-        data.forEach((r: any) => { map[r.key] = r.value; });
+        rows.forEach((r: any) => { map[r.key] = r.value; });
         if (map.brand_name) setBrandName(map.brand_name);
         if (map.hero_title_1) setHeroTitle1(map.hero_title_1);
         if (map.hero_title_2) setHeroTitle2(map.hero_title_2);
@@ -141,7 +169,7 @@ function SiteContentEditor() {
       setLoading(false);
     };
     fetchContent();
-  }, []);
+  }, [branchReady, branchId]);
 
   const saveAll = async () => {
     setSaving(true);
@@ -166,9 +194,18 @@ function SiteContentEditor() {
 
     let hasError = false;
     for (const entry of entries) {
-      const { error } = await supabase
-        .from("site_content")
-        .upsert({ key: entry.key, value: entry.value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      const existingQuery = supabase.from("site_content").select("id").eq("key", entry.key);
+      const { data: existing } = branchId
+        ? await existingQuery.eq("branch_id", branchId).maybeSingle()
+        : await existingQuery.is("branch_id", null).maybeSingle();
+      const { error } = existing
+        ? await supabase
+            .from("site_content")
+            .update({ value: entry.value, updated_at: new Date().toISOString() })
+            .eq("id", (existing as any).id)
+        : await supabase
+            .from("site_content")
+            .insert({ key: entry.key, value: entry.value, branch_id: branchId, updated_at: new Date().toISOString() } as any);
       if (error) {
         hasError = true;
         toast.error(`Lỗi lưu ${entry.key}: ${error.message}`);
@@ -219,6 +256,41 @@ function SiteContentEditor() {
           <Save size={16} />
           {saving ? "Đang lưu..." : "Lưu tất cả"}
         </Button>
+      </div>
+
+      {/* Branch switcher */}
+      <div className="glass-card rounded-2xl p-4">
+        <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+          <Building2 size={14} /> Chi nhánh đang chỉnh sửa
+        </p>
+        {isSuperadmin ? (
+          <>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setBranchId(null)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${branchId === null ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+              >
+                Nội dung chung (mặc định)
+              </button>
+              {branches.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setBranchId(b.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${branchId === b.id ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              "Nội dung chung" áp dụng cho toàn hệ thống. Khi chọn một chi nhánh, nội dung bạn lưu chỉ dành riêng cho chi nhánh đó (phần chưa sửa sẽ dùng nội dung chung).
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-foreground">
+            Bạn đang chỉnh sửa nội dung của chi nhánh mình. Các phần chưa sửa sẽ dùng nội dung chung của hệ thống.
+          </p>
+        )}
       </div>
 
       {/* Quick nav */}
