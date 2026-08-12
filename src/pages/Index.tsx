@@ -215,7 +215,7 @@ export default function LandingPage() {
         <div
           className="pointer-events-none absolute inset-0 z-[5]"
           style={{
-            background: "radial-gradient(120% 100% at 50% 35%, hsl(var(--background) / 0.72) 25%, hsl(var(--background) / 0.35) 55%, hsl(var(--background) / 0.75) 100%)"
+            background: "radial-gradient(120% 100% at 50% 35%, hsl(var(--background) / 0.55) 25%, hsl(var(--background) / 0.2) 55%, hsl(var(--background) / 0.6) 100%)"
           }}
           aria-hidden="true"
         />
@@ -224,12 +224,12 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="relative z-10 text-center"
+          className="relative z-10 mx-auto max-w-4xl text-center glass-card bg-background/80 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 shadow-2xl"
         >
           <h1 className="mb-4 text-4xl font-extrabold leading-tight md:text-6xl lg:text-7xl">
             Học Lái Xe — <span className="gradient-text">{heroTitle1}</span> & <span className="gradient-text-accent">{heroTitle2}</span>
           </h1>
-          <p className="mx-auto mb-12 max-w-2xl text-lg text-muted-foreground">{heroSubtitle}</p>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">{heroSubtitle}</p>
         </motion.div>
 
         <div className="relative z-10 flex flex-col gap-8 md:flex-row">
