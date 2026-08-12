@@ -691,24 +691,35 @@ export type Database = {
       }
       site_content: {
         Row: {
+          branch_id: string | null
           id: string
           key: string
           updated_at: string
           value: Json
         }
         Insert: {
+          branch_id?: string | null
           id?: string
           key: string
           updated_at?: string
           value?: Json
         }
         Update: {
+          branch_id?: string | null
           id?: string
           key?: string
           updated_at?: string
           value?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "site_content_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       training_progress: {
         Row: {

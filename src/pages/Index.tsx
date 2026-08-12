@@ -44,13 +44,26 @@ export default function LandingPage() {
   const [mobileNav, setMobileNav] = useState(false);
 
   useEffect(() => {
-    supabase.from("site_content").select("key, value").then(({ data }) => {
-      if (data) {
-        const map: Record<string, any> = {};
-        data.forEach((r: any) => { map[r.key] = r.value; });
-        setContent(map);
+    const load = async () => {
+      // ?cn=<mã chi nhánh> → hiển thị nội dung riêng của chi nhánh (fallback nội dung chung)
+      const code = new URLSearchParams(window.location.search).get("cn");
+      let branchId: string | null = null;
+      if (code) {
+        const { data: b } = await supabase.from("branches").select("id").eq("code", code).maybeSingle();
+        branchId = (b as any)?.id ?? null;
       }
-    });
+      const [globalRes, branchRes] = await Promise.all([
+        supabase.from("site_content").select("key, value").is("branch_id", null),
+        branchId
+          ? supabase.from("site_content").select("key, value").eq("branch_id", branchId)
+          : Promise.resolve({ data: [] as any[] } as any),
+      ]);
+      const rows = [...((globalRes.data as any[]) || []), ...(((branchRes as any).data as any[]) || [])];
+      const map: Record<string, any> = {};
+      rows.forEach((r: any) => { map[r.key] = r.value; });
+      setContent(map);
+    };
+    load();
   }, []);
 
   const brandName = content?.brand_name || "DriveMaster";
