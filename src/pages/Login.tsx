@@ -143,9 +143,9 @@ export default function Login() {
 
       {/* Test accounts — click to autofill */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.8, delay: 0.12 }}
         className="glass-card w-full rounded-2xl p-5"
       >
         <div className="mb-3 flex items-center gap-2">
