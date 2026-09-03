@@ -7,6 +7,7 @@ import { ContactWidget } from "@/components/landing/ContactWidget";
 import { ChatWidget } from "@/components/landing/ChatWidget";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RotatingImage } from "@/components/landing/RotatingImage";
+import { HeroLayout2 } from "@/components/landing/HeroLayout2";
 import {
   Bike, Car, LogIn, GraduationCap, Clock, Award, Users, Star, Heart,
   Menu, X, Phone, Mail, MapPin, FileText, Image as ImageIcon, Wrench, Info, Home, BookOpen, Download
@@ -137,6 +138,7 @@ export default function LandingPage() {
   const heroGallery = content?.hero_gallery || { title: "Hình ảnh trung tâm", slides: DEFAULT_HERO_SLIDES };
   const heroSlides: any[] = heroGallery.slides?.length ? heroGallery.slides : DEFAULT_HERO_SLIDES;
   const footerNote = content?.footer_note || "";
+  const homeLayout = String(content?.home_layout || "1");
 
   const scrollTo = (id: string) => {
     setMobileNav(false);
@@ -196,7 +198,24 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* Hero */}
+      {/* Hero — Layout 2 (Editorial Dashboard) */}
+      {homeLayout === "2" && (
+        <HeroLayout2
+          heroTitle1={heroTitle1}
+          heroTitle2={heroTitle2}
+          heroSubtitle={heroSubtitle}
+          brandName={brandName}
+          stats={stats}
+          motorbikeInfo={motorbikeInfo}
+          carInfo={carInfo}
+          heroSlides={heroSlides}
+          onMotorbike={() => setMotorbikeOpen(true)}
+          onCar={() => setCarOpen(true)}
+        />
+      )}
+
+      {/* Hero — Layout 1 (mặc định) */}
+      {homeLayout !== "2" && (
       <section id="home" className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
         <div className="absolute -top-20 left-1/4 h-96 w-96 rounded-full gradient-primary opacity-20 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full gradient-secondary opacity-20 blur-3xl" />
@@ -289,6 +308,8 @@ export default function LandingPage() {
           })}
         </motion.div>
       </section>
+      )}
+
 
       {/* Hero image collage */}
       <section className="relative px-4 pb-20 scroll-mt-16">
