@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, LogIn, Users } from "lucide-react";
+import { Eye, EyeOff, Home, LogIn, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,11 +76,19 @@ export default function Login() {
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full gradient-secondary opacity-20 blur-3xl" />
       </div>
 
+      <Link
+        to="/"
+        className="absolute left-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-md transition-all hover:scale-105 hover:border-primary/60 hover:bg-primary/10 hover:text-primary"
+      >
+        <Home size={18} />
+        Về trang chủ
+      </Link>
+
       <div className="relative z-10 grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.8 }}
         className="glass-card w-full rounded-2xl p-8"
       >
         <div className="mb-8 text-center">
@@ -135,9 +143,9 @@ export default function Login() {
 
       {/* Test accounts — click to autofill */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.8, delay: 0.12 }}
         className="glass-card w-full rounded-2xl p-5"
       >
         <div className="mb-3 flex items-center gap-2">
