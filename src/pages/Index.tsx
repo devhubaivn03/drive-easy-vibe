@@ -307,6 +307,8 @@ export default function LandingPage() {
           })}
         </motion.div>
       </section>
+      )}
+
 
       {/* Hero image collage */}
       <section className="relative px-4 pb-20 scroll-mt-16">
