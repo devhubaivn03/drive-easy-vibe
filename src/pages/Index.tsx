@@ -137,6 +137,7 @@ export default function LandingPage() {
   const heroGallery = content?.hero_gallery || { title: "Hình ảnh trung tâm", slides: DEFAULT_HERO_SLIDES };
   const heroSlides: any[] = heroGallery.slides?.length ? heroGallery.slides : DEFAULT_HERO_SLIDES;
   const footerNote = content?.footer_note || "";
+  const homeLayout = String(content?.home_layout || "1");
 
   const scrollTo = (id: string) => {
     setMobileNav(false);
