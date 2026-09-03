@@ -197,7 +197,24 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* Hero */}
+      {/* Hero — Layout 2 (Editorial Dashboard) */}
+      {homeLayout === "2" && (
+        <HeroLayout2
+          heroTitle1={heroTitle1}
+          heroTitle2={heroTitle2}
+          heroSubtitle={heroSubtitle}
+          brandName={brandName}
+          stats={stats}
+          motorbikeInfo={motorbikeInfo}
+          carInfo={carInfo}
+          heroSlides={heroSlides}
+          onMotorbike={() => setMotorbikeOpen(true)}
+          onCar={() => setCarOpen(true)}
+        />
+      )}
+
+      {/* Hero — Layout 1 (mặc định) */}
+      {homeLayout !== "2" && (
       <section id="home" className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
         <div className="absolute -top-20 left-1/4 h-96 w-96 rounded-full gradient-primary opacity-20 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full gradient-secondary opacity-20 blur-3xl" />
