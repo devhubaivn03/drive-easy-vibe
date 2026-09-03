@@ -7,6 +7,7 @@ import { ContactWidget } from "@/components/landing/ContactWidget";
 import { ChatWidget } from "@/components/landing/ChatWidget";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RotatingImage } from "@/components/landing/RotatingImage";
+import { HeroLayout2 } from "@/components/landing/HeroLayout2";
 import {
   Bike, Car, LogIn, GraduationCap, Clock, Award, Users, Star, Heart,
   Menu, X, Phone, Mail, MapPin, FileText, Image as ImageIcon, Wrench, Info, Home, BookOpen, Download
