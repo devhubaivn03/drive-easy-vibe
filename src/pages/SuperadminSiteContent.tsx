@@ -315,6 +315,50 @@ function SiteContentEditor() {
         </p>
       </div>
 
+      {/* Chọn kiểu bố cục trang chủ */}
+      <section id="sc-layout" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
+        <h2 className="text-lg font-semibold text-foreground">0. 🎨 Kiểu bố cục trang chủ</h2>
+        <p className="text-xs text-muted-foreground">Chọn cách trình bày phần đầu trang chủ. Nội dung bên dưới dùng chung cho cả hai kiểu.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { id: "1", name: "Bố cục 1 — Ảnh nền lớn", desc: "Tiêu đề nổi trên nền ảnh chia 4 khung, kèm 2 thẻ khóa học và dãy con số." },
+            { id: "2", name: "Bố cục 2 — Dạng bảng điều khiển", desc: "Tiêu đề ở giữa, các thẻ khóa học / con số / hình ảnh xếp gọn hai bên." },
+          ].map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setHomeLayout(opt.id)}
+              className={`rounded-2xl border p-4 text-left transition ${homeLayout === opt.id ? "border-primary bg-primary/10 shadow-lg" : "border-border/60 hover:border-primary/50"}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-bold text-foreground">{opt.name}</span>
+                {homeLayout === opt.id && <span className="rounded-full gradient-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">Đang dùng</span>}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{opt.desc}</p>
+              {opt.id === "1" ? (
+                <div className="mt-3 grid grid-cols-2 grid-rows-3 gap-1.5">
+                  <div className="row-span-2 rounded-lg bg-muted h-full min-h-8" />
+                  <div className="row-span-3 rounded-lg bg-muted min-h-8" />
+                  <div className="rounded-lg bg-primary/30 min-h-4" />
+                </div>
+              ) : (
+                <div className="mt-3 grid grid-cols-3 gap-1.5">
+                  <div className="space-y-1.5">
+                    <div className="h-6 rounded-lg bg-muted" />
+                    <div className="h-6 rounded-lg bg-muted" />
+                  </div>
+                  <div className="rounded-lg bg-primary/30" />
+                  <div className="space-y-1.5">
+                    <div className="h-6 rounded-lg bg-muted" />
+                    <div className="h-6 rounded-lg bg-muted" />
+                  </div>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* Brand & Hero */}
       <section id="sc-general" className="glass-card rounded-2xl p-6 space-y-4 scroll-mt-24">
         <h2 className="text-lg font-semibold text-foreground">1. 🏠 Thông tin chung</h2>
