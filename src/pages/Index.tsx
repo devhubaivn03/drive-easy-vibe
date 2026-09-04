@@ -138,7 +138,9 @@ export default function LandingPage() {
   const heroGallery = content?.hero_gallery || { title: "Hình ảnh trung tâm", slides: DEFAULT_HERO_SLIDES };
   const heroSlides: any[] = heroGallery.slides?.length ? heroGallery.slides : DEFAULT_HERO_SLIDES;
   const footerNote = content?.footer_note || "";
-  const homeLayout = String(content?.home_layout || "1");
+  // ?layout=2 để xem trước bố cục mà không cần lưu
+  const layoutPreview = new URLSearchParams(window.location.search).get("layout");
+  const homeLayout = String(layoutPreview || content?.home_layout || "1");
 
   const scrollTo = (id: string) => {
     setMobileNav(false);
