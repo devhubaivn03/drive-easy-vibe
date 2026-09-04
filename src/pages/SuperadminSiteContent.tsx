@@ -192,6 +192,7 @@ function SiteContentEditor() {
       { key: "courses_title", value: coursesTitle },
       { key: "footer_note", value: footerNote },
       { key: "hero_gallery", value: heroGallery },
+      { key: "home_layout", value: homeLayout },
     ];
 
     let hasError = false;
