@@ -121,6 +121,7 @@ function SiteContentEditor() {
     ],
   });
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [homeLayout, setHomeLayout] = useState("1");
 
   useEffect(() => {
     if (!profile) return;
