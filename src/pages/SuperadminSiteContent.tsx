@@ -166,6 +166,7 @@ function SiteContentEditor() {
         if (map.courses_title) setCoursesTitle(map.courses_title);
         if (map.footer_note) setFooterNote(map.footer_note);
         if (map.hero_gallery) setHeroGallery(map.hero_gallery);
+        setHomeLayout(String(map.home_layout || "1"));
       }
       setLoading(false);
     };
