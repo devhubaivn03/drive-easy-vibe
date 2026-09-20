@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Globe, LayoutDashboard, GraduationCap, ClipboardList, MessageCircle, Pencil, Settings, Info, Wrench, Image as ImageIcon, FileText, Phone, Building2 } from "lucide-react";
+import { Save, Plus, Trash2, Globe, Info, Wrench, Image as ImageIcon, FileText, Phone, Building2, Palette, Check } from "lucide-react";
 
 interface StatItem {
   icon: string;
@@ -90,7 +90,6 @@ function SiteContentEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
-  // null = nội dung chung (mặc định cho toàn hệ thống)
   const [branchId, setBranchId] = useState<string | null>(null);
   const [branchReady, setBranchReady] = useState(false);
 
@@ -121,6 +120,7 @@ function SiteContentEditor() {
     ],
   });
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [siteTheme, setSiteTheme] = useState<"theme1" | "theme2">("theme1");
 
   useEffect(() => {
     if (!profile) return;
@@ -139,11 +139,13 @@ function SiteContentEditor() {
     if (!branchReady) return;
     const fetchContent = async () => {
       setLoading(true);
+      if (!branchId) {
+        setLoading(false);
+        return;
+      }
       const [globalRes, branchRes] = await Promise.all([
         supabase.from("site_content").select("key, value").is("branch_id", null),
-        branchId
-          ? supabase.from("site_content").select("key, value").eq("branch_id", branchId)
-          : Promise.resolve({ data: [] as any[] }),
+        supabase.from("site_content").select("key, value").eq("branch_id", branchId),
       ]);
       const rows = [...((globalRes.data as any[]) || []), ...(((branchRes as any).data as any[]) || [])];
       {
@@ -165,6 +167,7 @@ function SiteContentEditor() {
         if (map.courses_title) setCoursesTitle(map.courses_title);
         if (map.footer_note) setFooterNote(map.footer_note);
         if (map.hero_gallery) setHeroGallery(map.hero_gallery);
+        setSiteTheme(map.site_theme === "theme2" ? "theme2" : "theme1");
       }
       setLoading(false);
     };
@@ -172,6 +175,10 @@ function SiteContentEditor() {
   }, [branchReady, branchId]);
 
   const saveAll = async () => {
+    if (!branchId) {
+      toast.error("Vui lòng chọn chi nhánh trước khi chỉnh sửa");
+      return;
+    }
     setSaving(true);
     const entries: { key: string; value: any }[] = [
       { key: "brand_name", value: brandName },
@@ -190,14 +197,13 @@ function SiteContentEditor() {
       { key: "courses_title", value: coursesTitle },
       { key: "footer_note", value: footerNote },
       { key: "hero_gallery", value: heroGallery },
+      { key: "site_theme", value: siteTheme },
     ];
 
     let hasError = false;
     for (const entry of entries) {
       const existingQuery = supabase.from("site_content").select("id").eq("key", entry.key);
-      const { data: existing } = branchId
-        ? await existingQuery.eq("branch_id", branchId).maybeSingle()
-        : await existingQuery.is("branch_id", null).maybeSingle();
+      const { data: existing } = await existingQuery.eq("branch_id", branchId).maybeSingle();
       const { error } = existing
         ? await supabase
             .from("site_content")
@@ -221,7 +227,7 @@ function SiteContentEditor() {
 
   const iconOptions = ["Users", "GraduationCap", "Clock", "Award", "Bike", "Car", "Star", "Heart", "Wrench", "FileText", "ImageIcon", "Info", "BookOpen", "Phone", "Mail", "MapPin", "Download"];
 
-  if (loading) {
+  if (loading && (!isSuperadmin || branchId)) {
     return <div className="p-6 text-muted-foreground">Đang tải...</div>;
   }
 
@@ -252,7 +258,7 @@ function SiteContentEditor() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Globe size={24} /> Quản lý nội dung Trang chủ
         </h1>
-        <Button variant="hero" className="rounded-xl" onClick={saveAll} disabled={saving}>
+        <Button variant="hero" className="rounded-xl" onClick={saveAll} disabled={saving || !branchId}>
           <Save size={16} />
           {saving ? "Đang lưu..." : "Lưu tất cả"}
         </Button>
@@ -266,12 +272,6 @@ function SiteContentEditor() {
         {isSuperadmin ? (
           <>
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setBranchId(null)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${branchId === null ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
-              >
-                Nội dung chung (mặc định)
-              </button>
               {branches.map((b) => (
                 <button
                   key={b.id}
@@ -282,16 +282,40 @@ function SiteContentEditor() {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              "Nội dung chung" áp dụng cho toàn hệ thống. Khi chọn một chi nhánh, nội dung bạn lưu chỉ dành riêng cho chi nhánh đó (phần chưa sửa sẽ dùng nội dung chung).
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground">Chọn một chi nhánh để mở nội dung và giao diện riêng của chi nhánh đó.</p>
           </>
         ) : (
           <p className="text-sm text-foreground">
-            Bạn đang chỉnh sửa nội dung của chi nhánh mình. Các phần chưa sửa sẽ dùng nội dung chung của hệ thống.
+            Bạn đang chỉnh sửa nội dung và giao diện riêng của chi nhánh mình.
           </p>
         )}
       </div>
+
+      {!branchId ? (
+        <div className="glass-card rounded-2xl border border-dashed border-primary/40 p-12 text-center">
+          <Building2 className="mx-auto mb-4 h-10 w-10 text-primary" />
+          <h2 className="text-lg font-semibold">Chọn chi nhánh để bắt đầu</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Mỗi chi nhánh có nội dung và theme trang chủ độc lập.</p>
+        </div>
+      ) : (
+      <>
+
+      <section className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Palette size={20} className="text-primary" />
+          <div><h2 className="text-lg font-semibold">Giao diện Trang chủ</h2><p className="text-xs text-muted-foreground">Theme được áp dụng riêng cho chi nhánh đang chọn.</p></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Button type="button" variant="outline" onClick={() => setSiteTheme("theme1")} className={`relative h-auto min-h-36 justify-start overflow-hidden p-4 text-left ${siteTheme === "theme1" ? "border-primary ring-2 ring-primary/30" : ""}`}>
+            <span className="flex w-full flex-col gap-3"><span className="grid h-16 grid-cols-3 gap-2 rounded-lg bg-muted p-2"><span className="col-span-2 rounded bg-primary/30" /><span className="rounded bg-secondary" /><span className="rounded bg-card" /><span className="rounded bg-card" /><span className="rounded bg-card" /></span><span><strong className="block">Theme 1 · Hiện tại</strong><small className="text-muted-foreground">Glassmorphism, nền chấm và màu xanh năng động.</small></span></span>
+            {siteTheme === "theme1" && <Check className="absolute right-3 top-3 text-primary" />}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setSiteTheme("theme2")} className={`relative h-auto min-h-36 justify-start overflow-hidden p-4 text-left ${siteTheme === "theme2" ? "border-primary ring-2 ring-primary/30" : ""}`}>
+            <span className="flex w-full flex-col gap-3"><span className="grid h-16 grid-cols-3 gap-2 rounded-lg bg-card p-2"><span className="rounded bg-primary" /><span className="col-span-2 rounded bg-foreground" /><span className="rounded bg-primary/30" /><span className="rounded bg-muted" /><span className="rounded bg-muted" /></span><span><strong className="block">Theme 2 · Golden Road</strong><small className="text-muted-foreground">Ivory/Graphite, vàng đồng và bố cục gọn theo mẫu.</small></span></span>
+            {siteTheme === "theme2" && <Check className="absolute right-3 top-3 text-primary" />}
+          </Button>
+        </div>
+      </section>
 
       {/* Quick nav */}
       <div className="glass-card rounded-2xl p-4">
@@ -646,6 +670,8 @@ function SiteContentEditor() {
           {saving ? "Đang lưu..." : "Lưu tất cả"}
         </Button>
       </div>
+      </>
+      )}
     </div>
   );
 }

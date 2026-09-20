@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { GoldenRoadLanding } from "@/components/landing/GoldenRoadLanding";
 
 const iconMap: Record<string, any> = {
   Users, GraduationCap, Clock, Award, Bike, Car, Star, Heart,
@@ -137,12 +138,37 @@ export default function LandingPage() {
   const heroGallery = content?.hero_gallery || { title: "Hình ảnh trung tâm", slides: DEFAULT_HERO_SLIDES };
   const heroSlides: any[] = heroGallery.slides?.length ? heroGallery.slides : DEFAULT_HERO_SLIDES;
   const footerNote = content?.footer_note || "";
+  const siteTheme = content?.site_theme === "theme2" ? "theme2" : "theme1";
 
   const scrollTo = (id: string) => {
     setMobileNav(false);
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  if (siteTheme === "theme2") {
+    return (
+      <GoldenRoadLanding
+        brandName={brandName}
+        heroTitle1={heroTitle1}
+        heroTitle2={heroTitle2}
+        heroSubtitle={heroSubtitle}
+        stats={stats}
+        motorbikeInfo={motorbikeInfo}
+        carInfo={carInfo}
+        aboutInfo={aboutInfo}
+        servicesInfo={servicesInfo}
+        galleryInfo={galleryInfo}
+        documentsInfo={documentsInfo}
+        contactInfo={contactInfo}
+        navLinks={NAV_LINKS}
+        coursesTitle={coursesTitle}
+        heroGallery={heroGallery}
+        heroSlides={heroSlides}
+        footerNote={footerNote}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background grid-bg">

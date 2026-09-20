@@ -74,3 +74,14 @@
 ### Lưu trữ ảnh
 Ảnh trang chủ upload vào bucket công khai `question-images` (tiền tố `site/`) —
 chỉ superadmin được ghi, ai cũng xem được.
+
+---
+
+## Theme Trang chủ theo Chi nhánh — 20/09/2026
+
+- Mỗi chi nhánh lưu lựa chọn riêng qua khóa `site_theme` trong `site_content`.
+- **Theme 1** giữ nguyên giao diện glassmorphism hiện tại.
+- **Theme 2 · Golden Road** dùng tông Ivory/Graphite và vàng đồng, bố cục bất đối xứng theo bản thiết kế, hỗ trợ Light/Dark và mobile.
+- Superadmin không còn mục “Nội dung chung”; bắt buộc chọn chi nhánh trước khi xem, sửa hoặc lưu.
+- Admin tự động làm việc với chi nhánh của mình.
+- Chi nhánh chưa có dữ liệu riêng được khởi tạo biểu mẫu từ dữ liệu chung cũ; khi lưu, dữ liệu luôn thuộc chi nhánh đã chọn.
