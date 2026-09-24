@@ -64,9 +64,9 @@ export function GoldenRoadLanding(props: GoldenRoadLandingProps) {
     <div className="landing-theme-2 min-h-screen bg-background text-foreground">
       <nav className="fixed inset-x-0 top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-          <Button variant="ghost" onClick={() => scrollTo("home")} className="h-auto px-0 hover:bg-transparent">
+          <Button variant="ghost" onClick={() => scrollTo("home")} className="min-w-0 max-w-[58%] justify-start px-0 hover:bg-transparent sm:max-w-none">
             <Car className="text-primary" />
-            <span className="text-lg font-extrabold">{brandName}</span>
+            <span className="truncate text-base font-extrabold sm:text-lg">{brandName}</span>
           </Button>
           <div className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
@@ -77,8 +77,8 @@ export function GoldenRoadLanding(props: GoldenRoadLandingProps) {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button asChild size="sm" className="rounded-full px-5">
-              <Link to="/login"><LogIn /> Đăng nhập</Link>
+            <Button asChild size="sm" className="rounded-full px-3 sm:px-5">
+              <Link to="/login" aria-label="Đăng nhập"><LogIn /><span className="hidden sm:inline">Đăng nhập</span></Link>
             </Button>
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileNav(!mobileNav)} aria-label="Mở menu">
               {mobileNav ? <X /> : <Menu />}
@@ -97,7 +97,7 @@ export function GoldenRoadLanding(props: GoldenRoadLandingProps) {
       </nav>
 
       <main>
-        <section id="home" className="mx-auto grid min-h-[78vh] max-w-7xl items-center gap-10 px-5 pb-16 pt-28 md:grid-cols-[0.95fr_1.05fr] md:px-8">
+        <section id="home" className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 pt-28 md:min-h-[620px] md:grid-cols-[0.95fr_1.05fr] md:px-8 md:pb-20 md:pt-24">
           <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
             <p className="mb-4 text-xs font-bold uppercase text-primary">Hệ thống đào tạo lái xe</p>
             <h1 className="max-w-xl text-5xl font-extrabold leading-[1.04] md:text-7xl">
